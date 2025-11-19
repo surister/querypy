@@ -81,13 +81,13 @@ class BooleanBinaryExpr(BinaryExpr):
 class AggregateExpr(LogicalExpression):
     def __init__(self, name: str, expr: LogicalExpression):
         self.name = name
-        self.expr = LogicalExpression
+        self.expr = expr
 
     def to_field(self, input: LogicalPlan):
         return Field(self.name, self.expr.to_field(input).type)
 
     def __repr__(self):
-        return f'{self.name}({self.expr})'
+        return f"{self.name}({self.expr})"
 
 
 class CountAggregateExpr(AggregateExpr):
@@ -95,7 +95,9 @@ class CountAggregateExpr(AggregateExpr):
         return Field("COUNT", ArrowTypes.Int32Type)
 
 
-def _boolean_binary_expr(name: str, op: str, l: LogicalExpression, r: LogicalExpression):
+def _boolean_binary_expr(
+        name: str, op: str, l: LogicalExpression, r: LogicalExpression
+):
     return BooleanBinaryExpr(name, op, l, r)
 
 
@@ -107,18 +109,43 @@ def _aggregate_expr(name: str, input: LogicalPlan):
     return AggregateExpr(name, input)
 
 
+# We implement operators in the literals, this allows us to have a easy to use
+# api, like col('some_col) != 1)
+# We could do fancy macro's/code generation here, let's not. It'll be easier to read
+# to implement every method in single lines.
+
+# Logical
 Eq = functools.partial(_boolean_binary_expr, "eq", "=")
-Neq = functools.partial(_boolean_binary_expr, name="neq", op="!=")
-Gt = functools.partial(_boolean_binary_expr, name="gt", op=">")
-GtEq = functools.partial(_boolean_binary_expr, name="gteq", op=">=")
-Lt = functools.partial(_boolean_binary_expr, name="lt", op="<")
-LtEq = functools.partial(_boolean_binary_expr, name="lteq", op="<=")
+Neq = functools.partial(_boolean_binary_expr, "neq", "!=")
+Gt = functools.partial(_boolean_binary_expr, "gt", ">")
+GtEq = functools.partial(_boolean_binary_expr, "gteq", ">=")
+Lt = functools.partial(_boolean_binary_expr, "lt", "<")
+LtEq = functools.partial(_boolean_binary_expr, "lteq", "<=")
 
-And = functools.partial(_boolean_binary_expr, name="and", op="AND")
-Or = functools.partial(_boolean_binary_expr, name="or", op="OR")
+And = functools.partial(_boolean_binary_expr, "and", "AND")
+Or = functools.partial(_boolean_binary_expr, "or", "OR")
 
-Add = functools.partial(_math_expr, name='add', op='+')
-Subtract = functools.partial(_math_expr, name='subtract', op='-')
+ColumnarExpr.__eq__ = lambda s, o: Eq(s, o)
+LiteralExpr.__eq__ = lambda s, o: Eq(s, o)
 
-Sum = functools.partial(_aggregate_expr, name='SUM')
-Min = functools.partial(_aggregate_expr, name='Min')
+ColumnarExpr.__ne__ = lambda s, o: Neq(s, o)
+LiteralExpr.__ne__ = lambda s, o: Neq(s, o)
+
+ColumnarExpr.__gt__ = lambda s, o: Gt(s, o)
+LiteralExpr.__gt__ = lambda s, o: Gt(s, o)
+
+ColumnarExpr.__ge__ = lambda s, o: GtEq(s, o)
+LiteralExpr.__ge__ = lambda s, o: GtEq(s, o)
+
+ColumnarExpr.__and__ = lambda s, o: Eq(s, o)
+LiteralExpr.__eq__ = lambda s, o: Eq(s, o)
+
+# Math.
+Add = functools.partial(_math_expr, "add", "+")
+Subtract = functools.partial(_math_expr, "subtract", "-")
+
+ColumnarExpr.__add__ = lambda s, o: Sum(s, o)
+LiteralExpr.__sub__ = lambda s, o: Subtract(s, o)
+
+Sum = functools.partial(_aggregate_expr, "SUM")
+Min = functools.partial(_aggregate_expr, "MIN")

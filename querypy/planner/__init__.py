@@ -8,7 +8,7 @@ class LogicalPlan(abc.ABC):
     """
     Represents a relation (a set of tuples) with a known schema.
 
-    Logical plans contain children logical plans.,
+    Logical plans contain children logical plans.
     """
 
     @abc.abstractmethod
@@ -46,11 +46,11 @@ class LogicalPlan(abc.ABC):
 
 class LogicalExpression(abc.ABC):
     @abc.abstractmethod
-    def to_field(self, input: 'LogicalPlan'):
+    def to_field(self, input: "LogicalPlan"):
         pass
 
+
 class PhysicalExpression(abc.ABC):
-    
     @abc.abstractmethod
     def evaluate(self, input: RecordBatch):
         pass
