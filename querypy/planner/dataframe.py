@@ -1,85 +1,125 @@
-"""
-interface DataFrame {
-
-  /** Apply a projection */
-  fun project(expr: List<LogicalExpr>): DataFrame
-
-  /** Apply a filter */
-  fun filter(expr: LogicalExpr): DataFrame
-
-  /** Aggregate */
-  fun aggregate(groupBy: List<LogicalExpr>,
-                aggregateExpr: List<AggregateExpr>): DataFrame
-
-  /** Returns the schema of the data that will be produced by this DataFrame. */
-  fun schema(): Schema
-
-  /** Get the logical plan */
-  fun logicalPlan() : LogicalPlan
-
-}
-"""
 from querypy.datasources.csv import CSVDataSource
-from querypy.planner import LogicalExpression
-from querypy.planner import LogicalPlan
-from querypy.planner.expressions import AggregateExpr
-from querypy.planner.expressions import ColumnarExpr
-from querypy.planner.expressions import Eq
-from querypy.planner.expressions import LiteralExpr
-from querypy.planner.expressions import LiteralLongExpr
-from querypy.planner.logical import Aggregate
-from querypy.planner.logical import Filter
-from querypy.planner.logical import Projection
-from querypy.planner.logical import Scan
+from querypy.planner.expressions import (
+    LogicalExpression,
+    LogicalPlan,
+    logical as logical_expression,
+)
+from querypy.planner.plans import logical as logical_plan
 from querypy.types_ import Schema
 
 
 class DataFrame:
+    """A DataFrame API class that makes creating logical plans easier..
+
+    Methods
+    -------
+    select(expr: list[LogicalExpression] | list[str])
+        Adds a projection plan, it parses strings into `logical.Column`
+    filter(expr: str | LogicalExpression)
+        Adds a filter plan, it parses strings into `logical.Column`
+    aggregate(group_by: list[LogicalExpression] | list[str], aggr: list[AggregateExpr])
+        Adds an aggregate plan.
+    schema()
+        The schema of the logical plan.
+    logical_plan()
+        The logical plan.
+    """
+
     def __init__(self, plan: LogicalPlan):
         self._plan = plan
 
-    def select(self, expr: list[LogicalExpression] | list[str]) -> "DataFrame":
-        if expr and isinstance(expr[0], str):
-            expr = [ColumnarExpr(col) for col in expr]
-        return DataFrame(Projection(self._plan, expr))
+    def select(
+        self, columns: list[logical_expression.Column] | list[str]
+    ) -> "DataFrame":
+        """Selects the given columns.
 
-    def filter(self, expr: str | LogicalExpression):
+        Parameters
+        ----------
+        columns : list[LogicalExpression] | list[str]
+            The list of columns to select.
+
+        Returns
+        -------
+        DataFrame
+            A dataframe with a projection in its query plan.
         """
-        Filter, supports direct Expression or common syntax.
+        if columns and isinstance(columns[0], str):
+            columns = [(col) for col in columns]
+        return DataFrame(logical_plan.Projection(self._plan, columns))
 
-        Examples:
+    def filter(self, expr: str | logical_expression.Boolean) -> "DataFrame":
+        """Applies a filter plan.
 
-        >>> filter(country='ES')
-        >>> filter('value=1')
-        >>> filter(col('country') == lit('ES'))
+        Parameters
+        ----------
+        expr : str | LogicalExpression
+            The expressions to filter the dataframe.
 
+        Returns
+        -------
+        DataFrame
+            A dataframe with a filter in its query plan.
+
+        Raises
+        ------
+        SyntaxError
+            e
+
+        Examples
+        --------
         """
         if isinstance(expr, str):
-            print(expr)
-            l, r = expr.split('=')
+            l, r = None, None
+            # This parsing logic is very easy to break, but it's fine as we don't
+            # want to implement more complex parsing capabilities.
+            for op in logical_expression.boolean_operators[
+                ::-1
+            ]:  # try to match longe operators first
+                l, r = expr.split(op)
+                continue
+
             if not l or not r:
-                raise SyntaxError('Filter syntax is not correct')
+                raise SyntaxError("Filter syntax is not correct")
+
             r = r.strip()
 
             if r.isdigit():
-                r = LiteralLongExpr(int(r))
+                r = logical_expression.LiteralInteger(int(r))
             else:
-                # naive support comparison between columns.
+                # naive support comparison parsing between columns.
                 if "'" in r:
                     r = r.replace("'", "")
-                    r = LiteralExpr(str(r))
+                    r = logical_expression.LiteralString(str(r))
                 else:
-                    r = r.replace('"', '')
-                    r = ColumnarExpr(str(r))
+                    r = r.replace('"', "")
+                    r = logical_expression.Column(str(r))
 
-            expr = Eq(ColumnarExpr(l.strip()), r)
-        return DataFrame(Filter(self._plan, expr))
+            expr = logical_expression.Eq(logical_expression.Column(l.strip()), r)
+        return DataFrame(logical_plan.Filter(self._plan, expr))
 
-    def aggregate(self, group_by: list[LogicalExpression] | list[str], aggr: list[AggregateExpr]):
+    def aggregate(
+        self,
+        group_by: list[LogicalExpression] | list[str],
+        aggr: list[logical_expression.Aggregate],
+    ):
+        """_summary_.
 
+        Parameters
+        ----------
+        group_by : list[LogicalExpression] | list[str]
+            _description_
+        aggr : list[AggregateExpr]
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         if group_by and isinstance(group_by[0], str):
-            group_by = [ColumnarExpr(col) for col in group_by]
-        return DataFrame(Aggregate(self._plan, group_by, aggr))
+            group_by = [logical_expression.Column(col) for col in group_by]
+
+        return DataFrame(logical_plan.Aggregate(self._plan, group_by, aggr))
 
     def schema(self) -> Schema:
         return self._plan.get_schema()
@@ -89,30 +129,56 @@ class DataFrame:
 
     @classmethod
     def scan_csv(cls, path: str, fields: list[str] = None) -> "DataFrame":
-        return DataFrame(Scan(path, CSVDataSource(path), fields or []))
+        """Reads the `fields` from a csv files in a given `path`.
+
+        It performs very basic csv parsing, more diverse csv formats might not be
+        compatible.
+
+        Parameters
+        ----------
+        path : str
+            The local filesystem path for the csv. e.g. 'employees.csv', it only supports
+             one file.
+        fields : list[str]
+            The fields to read (Default value = None)
+
+        Returns
+        -------
+        'DataFrame'
+            A dataframe with a plan to read csv in its logical plan.
+        """
+        return DataFrame(logical_plan.Scan(path, CSVDataSource(path), fields))
 
 
-class LogicalExpressionWrapper:
-    def __init__(self, log: LogicalExpression, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
+def col(name: str) -> logical_expression.Column:
+    """Reference to a column.
 
-    @classmethod
-    def col(cls, value):
-        return ColumnarExpr(value)
+    Parameters
+    ----------
+    name : str
+        The name of a column.
 
-
-def col(name: str) -> ColumnarExpr:
+    Returns
+    -------
+    ColumnarExpr
+        A reference to that column.
     """
-    Reference to a column.
+    return logical_expression.Column(name)
+
+
+def lit(value: int | str) -> logical_expression.Literal:
+    """Reference to a literal value, it can be either a string or an integer.
+
+    Parameters
+    ----------
+    value : int | str
+        The value to reference.
+
+    Returns
+    -------
+    LogicalExpression
+        The reference to the literal value.
     """
-    return ColumnarExpr(name)
-
-
-def lit(value: int | str) -> LogicalExpression:
-    """Reference to a value, it can be either an integer or a string."""
     if isinstance(value, int):
-        return LiteralLongExpr(value)
-    return LiteralExpr(value)
-
-
+        return logical_expression.LiteralInteger(value)
+    return logical_expression.LiteralString(value)
