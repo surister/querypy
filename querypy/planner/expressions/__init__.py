@@ -34,6 +34,7 @@ class LogicalExpression(abc.ABC):
     Represents an Expression on its logical form, meaning that it just
     holds logical information and references to typed values.
     """
+
     @abc.abstractmethod
     def to_field(self, input: "LogicalPlan") -> Field:
         """
@@ -68,7 +69,7 @@ class PhysicalPlan(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def children(self) -> list['PhysicalPlan']:
+    def children(self) -> list["PhysicalPlan"]:
         pass
 
     def __repr__(self):
@@ -87,6 +88,7 @@ class PhysicalExpression(abc.ABC):
     One logical expression might have different physical expressions. For example
     a join can be implemented using different algorithms: nested loop join, hash join...
     """
+
     @abc.abstractmethod
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         """

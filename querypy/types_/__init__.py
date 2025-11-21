@@ -72,6 +72,16 @@ class ArrowTypes(metaclass=NamedParameters):
     DoubleType = FloatingPoint(FloatingPointPrecision.DOUBLE)
     StringType = ArrowType()
 
+    @classmethod
+    def from_pyvalue(cls, v):
+        match v:
+            case str():
+                return cls.StringType
+            case int():
+                return cls.Int32Type
+            case _:
+                raise Exception(f"Type {v} not supported")
+
 
 class ColumnVector(abc.ABC):
     """
@@ -81,9 +91,10 @@ class ColumnVector(abc.ABC):
     In the Python context, a vector is a list/tuple.
     """
 
-    def __init__(self, type: ArrowType, size: int):
+    def __init__(self, type: ArrowType, value, size: int):
         self.type = type
         self.size = size
+        self.value = value
 
     def __len__(self):
         return self.size
@@ -94,21 +105,36 @@ class ColumnVector(abc.ABC):
 
 
 class LiteralValueVector(ColumnVector):
-    def __init__(self, type: ArrowType, size: int):
-        super().__init__(type, size)
+    def __init__(self, type: ArrowType, value: list, size: int):
+        super().__init__(type, value, size)
 
     def get_value(self, i):
-        return None
+        # check here index bounds?
+        if i >= self.size:
+            raise IndexError()
+        return self.value[i]
+
+    def __repr__(self):
+        max_width = 60
+        repr_ = repr(self.value)
+        if len(repr_) > max_width:
+            repr_ = repr_[:max_width] + "..."
+            if not repr_.endswith("]"):
+                repr_ += "]"
+        return repr_
 
 
 class Field:
     """
-    Represents a field in a known schema.
+    Represents a field with a known name and data type.
     """
 
     def __init__(self, name: str, type: ArrowType):
         self.name = name
         self.type = type
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.name})"
 
 
 class Schema:
@@ -118,6 +144,27 @@ class Schema:
 
     def __init__(self, fields: list[Field]):
         self.fields = fields
+
+    def select(self, names: list[str]):
+        """
+        Returns a schema with the given names, if any individual name
+        does not exist, it raises an Exception.
+        """
+        if not names:
+            return self
+
+        fields = [field for field in self.fields if field.name in names]
+        return Schema(fields)
+
+    def get_index_by_name(self, name: str):
+        """Given a name, return's its index, if not found it returns -1"""
+        for i, field in enumerate(self.fields):
+            if field.name == name:
+                return i
+        return -1
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({', '.join(map(lambda f: f.name, self.fields))})"
 
 
 class RecordBatch:
@@ -141,6 +188,19 @@ class RecordBatch:
         self.schema = schema
         self.fields = fields
 
+    @classmethod
+    def from_pylists(cls, schema: Schema, values: list[list]):
+        """Builds a record batch  from a list holding lists of values.
+
+        Example
+        -------
+        rb = RecordBatch.from_pylist(Schema(), [[1, 2, 3], ['v1', 'v2', 'v3']])
+        """
+        columns = []
+        for column, values in zip(schema.fields, values):
+            columns.append(LiteralValueVector(column.type, values, len(values)))
+        return cls(schema, columns)
+
     @property
     def row_count(self):
         """
@@ -151,7 +211,7 @@ class RecordBatch:
         """
         if not self.fields:
             return 0
-        return len(self.fields[0])
+        return self.fields[0].size
 
     @property
     def column_count(self):
@@ -159,3 +219,6 @@ class RecordBatch:
 
     def get_field(self, i):
         return self.fields[i]
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.fields}, num_cols={self.column_count}, row_count={self.row_count}"
