@@ -12,6 +12,7 @@ class Scan(LogicalPlan):
     A logical scan, reading data from a given datasource,
     it mostly delegates work to the datasource.
     """
+
     def __init__(self, path: str, datasource: DataSource, projection: list[str]):
         self.path = path
         self.datasource = datasource
@@ -41,10 +42,12 @@ class Scan(LogicalPlan):
     def __repr__(self):
         return f"Scan: {self.path}; projection={self.projection}"
 
+
 class Projection(LogicalPlan):
     """
     A projection over a schema. Commonly to reduce the number of columns.
     """
+
     def __init__(self, input: LogicalPlan, expr: list[LogicalExpression]):
         self.input = input
         self.expr = expr
@@ -65,6 +68,7 @@ class Filter(LogicalPlan):
     """
     A plan that filters out sets of rows by a given BooleanExpression
     """
+
     def __init__(self, input: LogicalPlan, expr: Boolean):
         self.input = input
         self.expr = expr
@@ -78,16 +82,18 @@ class Filter(LogicalPlan):
     def __repr__(self):
         return f"{super().__repr__()}: {self.expr}"
 
+
 class Aggregate(LogicalPlan):
     """
     A plan that aggregates rows by grouping or by aggregate functions, typically generating
     new columns.
     """
+
     def __init__(
-            self,
-            input: LogicalPlan,
-            group_by: list[Column],
-            aggregate: list[AggregateExpression],
+        self,
+        input: LogicalPlan,
+        group_by: list[Column],
+        aggregate: list[AggregateExpression],
     ):
         self.input = input
         self.group_by = group_by
@@ -102,4 +108,7 @@ class Aggregate(LogicalPlan):
         return [self.input]
 
     def __repr__(self):
-        return super().__repr__() + f'(group_by={self.group_by}, aggregate_by={self.aggregate})'
+        return (
+            super().__repr__()
+            + f"(group_by={self.group_by}, aggregate_by={self.aggregate})"
+        )

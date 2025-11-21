@@ -46,7 +46,14 @@ class Column(LogicalExpression):
         return "#" + self.name
 
 
-class LiteralString(LogicalExpression):
+class Literal(LogicalExpression):
+    """Represents an untyped literal"""
+
+    def to_field(self, input: "LogicalPlan") -> Field:
+        raise NotImplemented()
+
+
+class LiteralString(Literal):
     """Represents a literal string value
 
     Example
@@ -60,13 +67,13 @@ class LiteralString(LogicalExpression):
 
     def to_field(self, input: LogicalPlan):
         # return Field(self.expr, ArrowTypes.StringType)
-        raise Exception('A literal cannot be a field')
+        raise Exception("A literal cannot be a field")
 
     def __repr__(self):
         return repr(self.literal)
 
 
-class LiteralInteger(LogicalExpression):
+class LiteralInteger(Literal):
     """Represents a literal long value"""
 
     def __init__(self, literal: int):
@@ -79,7 +86,7 @@ class LiteralInteger(LogicalExpression):
         return repr(self.literal)
 
 
-class LiteralFloat(LogicalExpression):
+class LiteralFloat(Literal):
     """Represents a literal float value"""
 
     def __init__(self, literal: float):
@@ -123,19 +130,23 @@ class Binary(LogicalExpression):
     def __repr__(self):
         return f"{self.l} {self.op} {self.r}"
 
+
 class Boolean(Binary):
     """A binary expression whose results are boolean: True/False.
 
     Use to implement things like equality operators (=, <, =>...)
     """
+
     def to_field(self, input: LogicalPlan):
         return Field(self.name, ArrowTypes.BooleanType)
 
-def _boolean_expression(
-        name: str, op: str, l: LogicalExpression, r: LogicalExpression
-):
+
+def _boolean_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpression):
     """Constructor for boolean expressions."""
     return Boolean(name, op, l, r)
+
+
+boolean_operators = ["=", "!=", ">", "<", ">=", "<=", "or", "OR"]
 
 Eq = functools.partial(_boolean_expression, "eq", "=")
 Neq = functools.partial(_boolean_expression, "neq", "!=")
@@ -186,6 +197,7 @@ LiteralFloat.__and__ = lambda s, o: Or(s, o)
 
 class MathExpr(Binary):
     """A mathematical expression."""
+
     def to_field(self, input: LogicalPlan) -> Field:
         return Field(self.name, self.l.to_field(input).type)
 
@@ -200,8 +212,8 @@ def _math_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpress
 # pr's are welcome.
 Add = functools.partial(_math_expression, "add", "+")
 Subtract = functools.partial(_math_expression, "subtract", "-")
-Mult = functools.partial(_math_expression, 'multiply', '*')
-Div = functools.partial(_math_expression, 'divide', '/')
+Mult = functools.partial(_math_expression, "multiply", "*")
+Div = functools.partial(_math_expression, "divide", "/")
 
 Column.__add__ = lambda s, o: Add(s, o)
 LiteralString.__add__ = lambda s, o: Add(s, o)
@@ -231,6 +243,7 @@ class Aggregate(LogicalExpression):
     to_field(input: LogicalPlan)
         The field representing the expression.
     """
+
     def __init__(self, name: str, expr: LogicalExpression):
         self.name = name
         self.expr = expr
