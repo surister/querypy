@@ -3,7 +3,7 @@ from querypy.planner import LogicalExpression, LogicalPlan
 from querypy.types_ import Schema
 
 
-class Scan(LogicalPlan):
+class LogicalScan(LogicalPlan):
     def __init__(self, path: str, datasource: DataSource, projection: list[str]):
         self.path = path
         self.datasource = datasource
@@ -26,7 +26,7 @@ class Scan(LogicalPlan):
         return f"Scan: {self.path}; projection={self.projection}"
 
 
-class Projection(LogicalPlan):
+class LogicalProjection(LogicalPlan):
     def __init__(self, input: LogicalPlan, expr: list[LogicalExpression]):
         self.input = input
         self.expr = expr
@@ -40,10 +40,10 @@ class Projection(LogicalPlan):
         ]
 
     def __repr__(self):
-        return f"Projection({', '.join(str(i) for i in self.expr)})"
+        return f"{super().__repr__()}({', '.join(str(i) for i in self.expr)})"
 
 
-class Filter(LogicalPlan):
+class LogicalFilter(LogicalPlan):
     def __init__(self, input: LogicalPlan, expr: LogicalExpression):
         self.input = input
         self.expr = expr
@@ -58,29 +58,7 @@ class Filter(LogicalPlan):
         return f"{super().__repr__()}: {self.expr}"
 
 
-"""
-class Aggregate(
-    val input: LogicalPlan,
-    val groupExpr: List<LogicalExpr>,
-    val aggregateExpr: List<AggregateExpr>) : LogicalPlan {
-
-  override fun schema(): Schema {
-    return Schema(groupExpr.map { it.toField(input) } +
-         		  aggregateExpr.map { it.toField(input) })
-  }
-
-  override fun children(): List<LogicalPlan> {
-    return listOf(input)
-  }
-
-  override fun toString(): String {
-    return "Aggregate: groupExpr=$groupExpr, aggregateExpr=$aggregateExpr"
-  }
-}
-"""
-
-
-class Aggregate(LogicalPlan):
+class LogicalAggregate(LogicalPlan):
     def __init__(
             self,
             input: LogicalPlan,
@@ -101,3 +79,5 @@ class Aggregate(LogicalPlan):
 
     def __repr__(self):
         return super().__repr__() + f'(group_by={self.groupby}, aggregate_by={self.aggr})'
+
+
