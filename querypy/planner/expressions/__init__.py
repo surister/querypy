@@ -12,8 +12,9 @@ class LogicalPlan(abc.ABC):
     logical information and are typically composed by other `LogicalPlan`s and
     `LogicalExpression`s. It does not know anything about the actual physical data
     layout or how things will be executed.
-    You can think of it as the schematics of a room, where
-    many together compose the schematics of an entire house.
+
+    You can think of it as the schematics of a room, where many together compose the
+    schematics of an entire house. It tells you what to do, not how to do it.
     """
 
     @abc.abstractmethod
@@ -35,7 +36,8 @@ class LogicalExpression(abc.ABC):
     """
     @abc.abstractmethod
     def to_field(self, input: "LogicalPlan") -> Field:
-        """Returns the field representation of the Expression, not every expression
+        """
+        Returns the field representation of the Expression, not every expression
         will have this implemented, as some cannot be represented as Field.
 
         Parameters
@@ -74,6 +76,21 @@ class PhysicalPlan(abc.ABC):
 
 
 class PhysicalExpression(abc.ABC):
+    """
+    The physical representation of logical expressions, meaning that it knows
+    about the data layout and have specific working implementations.
+
+    An example is that in columnar data, in a logical form we would
+    reference a column by its name, but it's physical reference
+    would be the index of the column, for performance reasons.
+
+    One logical expression might have different physical expressions. For example
+    a join can be implemented using different algorithms: nested loop join, hash join...
+    """
     @abc.abstractmethod
     def evaluate(self, input: RecordBatch) -> ColumnVector:
+        """
+        The evaluation of the specific implementation of the Expressions, it returns real, physical,
+        modified data.
+        """
         pass
