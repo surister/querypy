@@ -8,7 +8,7 @@ from querypy.types_ import RecordBatch
 from querypy.types_ import Schema
 
 
-class ScanExecutionPlan(PhysicalPlan):
+class Scan(PhysicalPlan):
     """
     Physical implementation of a Scan operation.
     """
@@ -30,7 +30,7 @@ class ScanExecutionPlan(PhysicalPlan):
         return f"{self.__class__.__name__}: schema={self.schema()}, projection={self.projection}"
 
 
-class ProjectionExecutionPlan(PhysicalPlan):
+class Projection(PhysicalPlan):
     def __init__(
         self, input: PhysicalPlan, schema: Schema, expr: list[PhysicalExpression]
     ):
