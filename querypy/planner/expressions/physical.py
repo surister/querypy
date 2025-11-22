@@ -39,6 +39,30 @@ class LiteralString(PhysicalExpression):
         return LiteralValueVector(ArrowTypes.StringType, [self.value], input.row_count)
 
 
+class LiteralInteger(PhysicalExpression):
+    """
+    Represents a vector of literal integers.
+    """
+
+    def __init__(self, value: int):
+        self.value = value
+
+    def evaluate(self, input: RecordBatch) -> ColumnVector:
+        return LiteralValueVector(ArrowTypes.Int32Type, [self.value], input.row_count)
+
+
+class LiteralFloat(PhysicalExpression):
+    """
+    Represents a vector of literal integers.
+    """
+
+    def __init__(self, value: float):
+        self.value = value
+
+    def evaluate(self, input: RecordBatch) -> ColumnVector:
+        return LiteralValueVector(ArrowTypes.FloatType, [self.value], input.row_count)
+
+
 class Binary(PhysicalExpression):
     """
     Physical implementation of a binary operation.

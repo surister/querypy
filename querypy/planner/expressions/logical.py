@@ -62,38 +62,38 @@ class LiteralString(Literal):
     'somevalue'
     """
 
-    def __init__(self, literal: str):
-        self.value = literal
+    def __init__(self, value: str):
+        self.value = value
 
     def to_field(self, input: LogicalPlan):
         # return Field(self.expr, ArrowTypes.StringType)
         raise Exception("A literal cannot be a field")
 
     def __repr__(self):
-        return repr(self.literal)
+        return repr(self.value)
 
 
 class LiteralInteger(Literal):
     """Represents a literal long value"""
 
-    def __init__(self, literal: int):
-        self.literal = literal
+    def __init__(self, value: int):
+        self.value = value
 
     def to_field(self, _: LogicalPlan):
-        return Field(str(self.literal), ArrowTypes.Int64Type)
+        return Field(str(self.value), ArrowTypes.Int64Type)
 
     def __repr__(self):
-        return repr(self.literal)
+        return repr(self.value)
 
 
 class LiteralFloat(Literal):
     """Represents a literal float value"""
 
-    def __init__(self, literal: float):
-        self.literal = literal
+    def __init__(self, value: float):
+        self.value = value
 
     def to_field(self, _: LogicalPlan):
-        return Field(str(self.literal), ArrowTypes.FloatType)
+        return Field(str(self.value), ArrowTypes.FloatType)
 
 
 class Binary(LogicalExpression):
