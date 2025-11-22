@@ -1,7 +1,17 @@
 Pure python query engine based in Arrow.
 
-It is a pure python implementation of the book `How query engines work by Andy Groove`. This is
-for educational purposes only, under no reason one should use this.
+It is a pure python implementation of the book [How query engines work by Andy Groove](https://www.howqueryengineswork.com).
+This is for educational purposes only, under no reason one should use this for any real work.
+
+Implementing the following query:
+
+```sql
+SELECT id, country, salary
+FROM employee
+WHERE country = 'ES'
+  AND salary > 40000
+GROUP BY id, country, salary;
+```
 
 
 ```python
