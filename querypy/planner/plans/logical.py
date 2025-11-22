@@ -40,7 +40,7 @@ class Scan(LogicalPlan):
         return []
 
     def __repr__(self):
-        return f"Scan: {self.path}; projection={self.projection}"
+        return f"Scan: '{self.path}'; projection={self.projection}"
 
 
 class Projection(LogicalPlan):

@@ -109,7 +109,6 @@ class LiteralValueVector(ColumnVector):
         super().__init__(type, value, size)
 
     def get_value(self, i):
-        # check here index bounds?
         if i >= self.size:
             raise IndexError()
         return self.value[i]
@@ -188,6 +187,9 @@ class RecordBatch:
         self.schema = schema
         self.fields = fields
 
+    def column_names(self) -> list[str]:
+        return list(map(lambda x: x.name, self.schema.fields))
+
     @classmethod
     def from_pylists(cls, schema: Schema, values: list[list]):
         """Builds a record batch  from a list holding lists of values.
@@ -221,4 +223,4 @@ class RecordBatch:
         return self.fields[i]
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.fields}, num_cols={self.column_count}, row_count={self.row_count}"
+        return f"{self.__class__.__name__}(fields={self.fields}, columns={self.column_names()}, num_cols={self.column_count}, row_count={self.row_count}"
