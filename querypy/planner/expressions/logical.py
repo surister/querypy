@@ -1,6 +1,6 @@
 import functools
 
-from querypy.exceptions import QueryEngineError
+from querypy.exceptions import UnknownColumnError
 from querypy.planner.expressions import LogicalExpression
 from querypy.planner.expressions import LogicalPlan
 from querypy.types_ import ArrowTypes
@@ -40,7 +40,7 @@ class Column(LogicalExpression):
         for field in input.get_schema().fields:
             if field.name == self.name:
                 return field
-        raise QueryEngineError(self.name)
+        raise UnknownColumnError(self.name)
 
     def __repr__(self):
         return "#" + self.name

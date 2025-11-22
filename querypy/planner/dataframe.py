@@ -4,6 +4,7 @@ from querypy.planner.expressions import (
     LogicalPlan,
     logical as logical_expression,
 )
+from querypy.planner.expressions.logical import Column
 from querypy.planner.plans import logical as logical_plan
 from querypy.types_ import Schema
 
@@ -43,8 +44,12 @@ class DataFrame:
         DataFrame
             A dataframe with a projection in its query plan.
         """
-        if columns and isinstance(columns[0], str):
-            columns = [(col) for col in columns]
+
+
+        match columns:
+            # This only checks that the first one is a string.
+            case [str(),*_]:
+                columns = [Column(col) for col in columns]
         return DataFrame(logical_plan.Projection(self._plan, columns))
 
     def filter(self, expr: str | logical_expression.Boolean) -> "DataFrame":
