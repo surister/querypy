@@ -45,7 +45,6 @@ class DataFrame:
             A dataframe with a projection in its query plan.
         """
 
-
         match columns:
             # This only checks that the first one is a string.
             case [str(),*_]:
@@ -68,20 +67,21 @@ class DataFrame:
         Raises
         ------
         SyntaxError
-            e
+            If the filter syntax is not correct.
 
         Examples
         --------
         """
         if isinstance(expr, str):
             l, r = None, None
-            # This parsing logic is very easy to break, but it's fine as we don't
+            # this parsing logic is very easy to break, but it's fine as we don't
             # want to implement more complex parsing capabilities.
             for op in logical_expression.boolean_operators[
                 ::-1
             ]:  # try to match longe operators first
-                l, r = expr.split(op)
-                continue
+                if op in expr:
+                    l, r = expr.split(op)
+                    continue
 
             if not l or not r:
                 raise SyntaxError("Filter syntax is not correct")
