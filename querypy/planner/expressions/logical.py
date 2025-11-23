@@ -260,5 +260,6 @@ def _aggregate_expression(name: str, input: LogicalExpression):
     return Aggregate(name, input)
 
 
-Max = functools.partial(_aggregate_expression, "SUM")
+Max = functools.partial(_aggregate_expression, "MAX")
 Min = functools.partial(_aggregate_expression, "MIN")
+Sum = functools.partial(_aggregate_expression, "SUM")
