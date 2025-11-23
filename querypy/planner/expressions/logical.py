@@ -223,7 +223,7 @@ LiteralFloat.__add__ = lambda s, o: Add(s, o)
 Column.__sub__ = lambda s, o: Subtract(s, o)
 LiteralString.__sub__ = lambda s, o: Subtract(s, o)
 LiteralInteger.__sub__ = lambda s, o: Subtract(s, o)
-LiteralFloat = lambda s, o: Subtract(s, o)
+LiteralFloat.__sub__ = lambda s, o: Subtract(s, o)
 
 
 class Aggregate(LogicalExpression):
