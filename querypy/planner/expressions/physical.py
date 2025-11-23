@@ -112,3 +112,7 @@ class Eq(Boolean):
         # We currently don't use the type, since most python object
         # implement equality without much work.
         return l == r
+
+class Gt(Boolean):
+    def compare(self, l, r, t: ArrowType) -> bool:
+        return l > r

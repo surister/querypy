@@ -39,7 +39,7 @@ class CSVDataSource(DataSource):
 
     @functools.lru_cache
     def get_schema(self) -> Schema:
-        """Gets the schema of the file. Only the first row is used to [detect] t
+        """Gets the schema of the file. Only the first row is used to [detect] the datatypes.
 
         Returns
         -------
@@ -52,7 +52,8 @@ class CSVDataSource(DataSource):
             first_row = next(reader)
         fields = []
         for name, value in zip(columns, first_row):
-            fields.append(Field(name, ArrowTypes.from_pyvalue(value)))
+            v = int(value) if value.isdigit() else value
+            fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
         return Schema(fields)
 
     def scan(self, projection: list[str]) -> list[RecordBatch]:
@@ -82,9 +83,11 @@ class CSVDataSource(DataSource):
             values = [[] for _ in range(len(columns))]
 
             for name, value in zip(columns, first_row):
-                fields.append(Field(name, ArrowTypes.from_pyvalue(value)))
+                v = int(value) if value.isdigit() else value
+                fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
+
                 # Append the first row.
-                values[first_row.index(value)].append(value)
+                values[first_row.index(value)].append(v)
 
             schema = Schema(fields)
 
@@ -93,7 +96,8 @@ class CSVDataSource(DataSource):
                 while reader:
                     for i, value in enumerate(next(reader)):
                         if i < len(columns):
-                            values[i].append(value)
+                            v = int(value) if value.isdigit() else value
+                            values[i].append(v)
             except StopIteration:
                 pass
 

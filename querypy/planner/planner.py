@@ -33,6 +33,8 @@ def create_physical_expr(
             match expr.name:
                 case "eq":
                     return physical_expressions.Eq(l, r)
+                case "gt":
+                    return physical_expressions.Gt(l, r)
     return
 
 

@@ -72,15 +72,20 @@ class DataFrame:
         Examples
         --------
         """
+
+        # the operator that was detected.
+        chosen_op = None
+        print('expr is ', expr)
         if isinstance(expr, str):
             l, r = None, None
             # this parsing logic is very easy to break, but it's fine as we don't
             # want to implement more complex parsing capabilities.
             for op in logical_expression.boolean_operators[
                 ::-1
-            ]:  # try to match longe operators first
+            ]:  # try to match long operators first
                 if op in expr:
                     l, r = expr.split(op)
+                    chosen_op = op
                     continue
 
             if not l or not r:
@@ -98,8 +103,14 @@ class DataFrame:
                 else:
                     r = r.replace('"', "")
                     r = logical_expression.Column(str(r))
+            match chosen_op:
+                case '=':
+                    expr = logical_expression.Eq(logical_expression.Column(l.strip()), r)
+                case '>':
+                    expr = logical_expression.Gt(logical_expression.Column(l.strip()), r)
+                case _:
+                    raise Exception('Not supported')
 
-            expr = logical_expression.Eq(logical_expression.Column(l.strip()), r)
         return DataFrame(logical_plan.Filter(self._plan, expr))
 
     def aggregate(

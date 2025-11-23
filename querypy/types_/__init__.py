@@ -176,7 +176,7 @@ class Schema:
         return -1
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({', '.join(map(lambda f: f.name, self.fields))})"
+        return f"{self.__class__.__name__}({', '.join(map(lambda f: str(f.type) + ':' + f.name, self.fields))})"
 
 
 class RecordBatch:
