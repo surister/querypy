@@ -1,3 +1,5 @@
+import abc
+
 from querypy.planner.expressions import PhysicalExpression
 from querypy.types_ import ArrowType
 from querypy.types_ import ArrowTypes
@@ -86,15 +88,27 @@ class Binary(PhysicalExpression):
         return ll, lr
 
 
+class Boolean(Binary):
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        ll, lr = super().evaluate(input)
+        mask = [
+            int(self.compare(ll.get_value(i), lr.get_value(i), ll.type))
+            for i in range(len(ll))
+        ]
+        return ColumnVector(ArrowTypes.Int8Type, mask, ll.size)
 
-class Eq(PhysicalExpression):
+    @abc.abstractmethod
+    def compare(self, l, r, t: ArrowType) -> bool:
+        """Evaluates the left and right value to boolean operation"""
+        pass
+
+
+class Eq(Boolean):
     """
     Physical implementation of equality.
     """
 
-    def __init__(self, l: PhysicalExpression, r: PhysicalExpression):
-        self.l = l
-        self.r = r
-
-    def evaluate(self, l, r, arrowtype: ArrowType) -> bool:
-        return l.evaluate() == r.evaluate()
+    def compare(self, l, r, t) -> bool:
+        # We currently don't use the type, since most python object
+        # implement equality without much work.
+        return l == r

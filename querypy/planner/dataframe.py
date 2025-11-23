@@ -47,7 +47,7 @@ class DataFrame:
 
         match columns:
             # This only checks that the first one is a string.
-            case [str(),*_]:
+            case [str(), *_]:
                 columns = [Column(col) for col in columns]
         return DataFrame(logical_plan.Projection(self._plan, columns))
 

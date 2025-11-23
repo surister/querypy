@@ -4,8 +4,7 @@ from typing import Generator
 from querypy.datasources import DataSource
 from querypy.planner.expressions import PhysicalExpression
 from querypy.planner.expressions import PhysicalPlan
-from querypy.types_ import RecordBatch
-from querypy.types_ import Schema
+from querypy.types_ import ColumnVector, RecordBatch, Schema
 
 
 class Scan(PhysicalPlan):
@@ -53,3 +52,29 @@ class Projection(PhysicalPlan):
 
     def __repr__(self):
         return f"{super().__repr__()}({', '.join(str(i) for i in self.expr)})"
+
+
+class Filter(PhysicalPlan):
+    def __init__(self, input: PhysicalPlan, expr: PhysicalExpression):
+        self.input = input
+        self.expr = expr
+
+    def schema(self) -> Schema:
+        return self.input.schema()
+
+    def children(self):
+        return [self.input]
+
+    def execute(self) -> list[RecordBatch]:
+        """We apply the obtained bitmask to every field of the record batch(s)"""
+        input = self.input.execute()
+        new_record_batches = []
+        for batch in input:
+            mask = self.expr.evaluate(batch)
+            new_fields = []
+            for field in batch.fields:
+                new_values = [v for v, b in zip(field.value, mask.value) if b]
+                new_field = ColumnVector(field.type, new_values, len(new_values))
+                new_fields.append(new_field)
+            new_record_batches.append(RecordBatch(batch.schema, new_fields))
+        return new_record_batches

@@ -1,5 +1,6 @@
 class QueryEngineError(BaseException):
     """Errors raised by the QueryEngine"""
+
     pass
 
 
