@@ -2,6 +2,7 @@ from querypy.planner.expressions import PhysicalExpression
 from querypy.types_ import ArrowType
 from querypy.types_ import ArrowTypes
 from querypy.types_ import ColumnVector
+from querypy.types_ import ColumnVectorABC
 from querypy.types_ import LiteralValueVector
 from querypy.types_ import RecordBatch
 
@@ -35,8 +36,8 @@ class LiteralString(PhysicalExpression):
     def __init__(self, value: str):
         self.value = value
 
-    def evaluate(self, input: RecordBatch) -> ColumnVector:
-        return LiteralValueVector(ArrowTypes.StringType, [self.value], input.row_count)
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        return LiteralValueVector(ArrowTypes.StringType, self.value, input.row_count)
 
 
 class LiteralInteger(PhysicalExpression):
@@ -47,8 +48,8 @@ class LiteralInteger(PhysicalExpression):
     def __init__(self, value: int):
         self.value = value
 
-    def evaluate(self, input: RecordBatch) -> ColumnVector:
-        return LiteralValueVector(ArrowTypes.Int32Type, [self.value], input.row_count)
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        return LiteralValueVector(ArrowTypes.Int32Type, self.value, input.row_count)
 
 
 class LiteralFloat(PhysicalExpression):
@@ -59,8 +60,8 @@ class LiteralFloat(PhysicalExpression):
     def __init__(self, value: float):
         self.value = value
 
-    def evaluate(self, input: RecordBatch) -> ColumnVector:
-        return LiteralValueVector(ArrowTypes.FloatType, [self.value], input.row_count)
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        return LiteralValueVector(ArrowTypes.FloatType, self.value, input.row_count)
 
 
 class Binary(PhysicalExpression):
@@ -72,14 +73,18 @@ class Binary(PhysicalExpression):
         self.l = l
         self.r = r
 
-    def evaluate(self, input: RecordBatch) -> ColumnVector:
+    def evaluate(self, input: RecordBatch) -> tuple[ColumnVectorABC, ColumnVectorABC]:
         ll = self.l.evaluate(input)
         lr = self.r.evaluate(input)
+
         assert ll.size == lr.size, "columns have distinct row sizes"
 
         if ll.type != lr.type:
-            raise TypeError("Binary expression operands do not have the same type")
-        return self.evaluate(ll, lr)  # no way this is right
+            raise TypeError(
+                f"Binary expression operands do not have the same type: l {ll.type} r {lr.type}"
+            )
+        return ll, lr
+
 
 
 class Eq(PhysicalExpression):

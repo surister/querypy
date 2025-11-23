@@ -1,4 +1,5 @@
 import abc
+import typing
 from enum import Enum
 
 
@@ -83,7 +84,7 @@ class ArrowTypes(metaclass=NamedParameters):
                 raise Exception(f"Type {v} not supported")
 
 
-class ColumnVector(abc.ABC):
+class ColumnVectorABC(abc.ABC):
     """
     Represents a Column holding a vector of the
     same type.
@@ -91,7 +92,7 @@ class ColumnVector(abc.ABC):
     In the Python context, a vector is a list/tuple.
     """
 
-    def __init__(self, type: ArrowType, value, size: int):
+    def __init__(self, type: ArrowType, value: list, size: int):
         self.type = type
         self.size = size
         self.value = value
@@ -103,16 +104,6 @@ class ColumnVector(abc.ABC):
     def get_value(self, i):
         pass
 
-
-class LiteralValueVector(ColumnVector):
-    def __init__(self, type: ArrowType, value: list, size: int):
-        super().__init__(type, value, size)
-
-    def get_value(self, i):
-        if i >= self.size:
-            raise IndexError()
-        return self.value[i]
-
     def __repr__(self):
         max_width = 60
         repr_ = repr(self.value)
@@ -121,6 +112,28 @@ class LiteralValueVector(ColumnVector):
             if not repr_.endswith("]"):
                 repr_ += "]"
         return repr_
+
+
+class ColumnVector(ColumnVectorABC):
+    def get_value(self, i):
+        if 0 > i <= len(self):
+            raise IndexError()
+        return self.value[i]
+
+
+class LiteralValueVector(ColumnVectorABC):
+    """
+    Represents a vector that holds just a literal value, in every get_value
+    it returns the value.
+    """
+
+    def __init__(self, type: ArrowType, value: typing.Any, size: int):
+        super().__init__(type, value, size)
+
+    def get_value(self, i):
+        if 0 > i <= self.size:
+            raise IndexError()
+        return self.value
 
 
 class Field:
@@ -200,7 +213,7 @@ class RecordBatch:
         """
         columns = []
         for column, values in zip(schema.fields, values):
-            columns.append(LiteralValueVector(column.type, values, len(values)))
+            columns.append(ColumnVector(column.type, values, len(values)))
         return cls(schema, columns)
 
     @property
