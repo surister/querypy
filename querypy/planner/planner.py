@@ -35,6 +35,8 @@ def create_physical_expr(
                     return physical_expressions.Eq(l, r)
                 case "gt":
                     return physical_expressions.Gt(l, r)
+                case "lt":
+                    return physical_expressions.Lt(l, r)
     return
 
 

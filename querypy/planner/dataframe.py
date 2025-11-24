@@ -75,7 +75,6 @@ class DataFrame:
 
         # the operator that was detected.
         chosen_op = None
-        print('expr is ', expr)
         if isinstance(expr, str):
             l, r = None, None
             # this parsing logic is very easy to break, but it's fine as we don't
@@ -108,6 +107,8 @@ class DataFrame:
                     expr = logical_expression.Eq(logical_expression.Column(l.strip()), r)
                 case '>':
                     expr = logical_expression.Gt(logical_expression.Column(l.strip()), r)
+                case '<':
+                    expr = logical_expression.Lt(logical_expression.Column(l.strip()), r)
                 case _:
                     raise Exception('Not supported')
 

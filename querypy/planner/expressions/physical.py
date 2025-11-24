@@ -116,3 +116,8 @@ class Eq(Boolean):
 class Gt(Boolean):
     def compare(self, l, r, t: ArrowType) -> bool:
         return l > r
+
+class Lt(Boolean):
+    def compare(self, l, r, t: ArrowType) -> bool:
+        return l < r
+
