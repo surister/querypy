@@ -133,6 +133,8 @@ class Accumulator(abc.ABC):
     def final_value(self) -> typing.Any:
         pass
 
+    def __repr__(self):
+        return self.__class__.__name__ + f'(accumulated_values={self.accumulated_values}, value={self.value})'
 
 class MaxAccumulator(Accumulator):
     def __init__(self):
@@ -147,8 +149,16 @@ class MaxAccumulator(Accumulator):
     def final_value(self) -> typing.Any:
         return self.value
 
-    def __repr__(self):
-        return self.__class__.__name__ + f'(accumulated_values={self.accumulated_values}, value={self.value})'
+
+class CountAccumulator(Accumulator):
+    def __init__(self):
+        self.count = 0
+
+    def accumulate(self, _):
+        self.count += 1
+
+    def final_value(self) -> typing.Any:
+        return self.count
 
 
 class Aggregate(PhysicalExpression, abc.ABC):
@@ -169,3 +179,10 @@ class Max(Aggregate):
 
     def __repr__(self):
         return self.__repr__() + f"({self.expr})"
+
+class Count(Aggregate):
+    def create_accumulator(self) -> Accumulator:
+        return CountAccumulator()
+
+    def evaluate(self, input: RecordBatch) -> ColumnVector:
+        pass
