@@ -249,7 +249,7 @@ class Aggregate(LogicalExpression):
         self.expr = expr
 
     def to_field(self, input: LogicalPlan):
-        return Field(self.name, self.expr.to_field(input).type)
+        return Field(f'{self.name.lower()}_{str(self.expr)}', self.expr.to_field(input).type)
 
     def __repr__(self):
         return f"{self.name}({self.expr})"
