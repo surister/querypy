@@ -67,6 +67,12 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                         aggr.append(physical_expressions.Max(
                             create_physical_expr(expr.expr, plan.input)
                         ))
+                    case "COUNT":
+                        aggr.append(
+                            physical_expressions.Count(
+                                create_physical_expr(expr.expr, plan.input)
+                            )
+                        )
                     case _:
                         ...
             return HashAggregate(input,

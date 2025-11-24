@@ -259,7 +259,7 @@ def _aggregate_expression(name: str, input: LogicalExpression):
     """Constructor for aggregate expressions"""
     return Aggregate(name, input)
 
-
+Count = functools.partial(_aggregate_expression,"COUNT")
 Max = functools.partial(_aggregate_expression, "MAX")
 Min = functools.partial(_aggregate_expression, "MIN")
 Sum = functools.partial(_aggregate_expression, "SUM")
