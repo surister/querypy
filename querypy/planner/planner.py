@@ -9,6 +9,7 @@ from querypy.planner.expressions import logical as logical_expressions
 from querypy.planner.expressions import physical as physical_expressions
 from querypy.planner.plans import logical as logical_plans
 from querypy.planner.plans import physical as physical_plans
+from querypy.planner.plans.physical import HashAggregate
 from querypy.types_ import Schema
 
 
@@ -54,4 +55,22 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
             input = create_physical_plan(plan.input)
             filter_expr = create_physical_expr(plan.expr, plan.input)
             return physical_plans.Filter(input, filter_expr)
+        case logical_plans.Aggregate():
+            input = create_physical_plan(plan.input)
+            group_expr = [
+                create_physical_expr(expr, plan.input) for expr in plan.group_by
+            ]
+            aggr = []
+            for expr in plan.aggregate:
+                match expr.name:
+                    case "MAX":
+                        aggr.append(physical_expressions.Max(
+                            create_physical_expr(expr.expr, plan.input)
+                        ))
+                    case _:
+                        ...
+            return HashAggregate(input,
+                                 group_expr=group_expr,
+                                 aggregate_expr=aggr,
+                                 schema=plan.get_schema())
     return

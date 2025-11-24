@@ -1,4 +1,5 @@
 import abc
+import typing
 
 from querypy.planner.expressions import PhysicalExpression
 from querypy.types_ import ArrowType
@@ -80,7 +81,6 @@ class Binary(PhysicalExpression):
         lr = self.r.evaluate(input)
 
         assert ll.size == lr.size, "columns have distinct row sizes"
-
         if ll.type != lr.type:
             raise TypeError(
                 f"Binary expression operands do not have the same type: l {ll.type} r {lr.type}"
@@ -113,11 +113,59 @@ class Eq(Boolean):
         # implement equality without much work.
         return l == r
 
+
 class Gt(Boolean):
     def compare(self, l, r, t: ArrowType) -> bool:
         return l > r
+
 
 class Lt(Boolean):
     def compare(self, l, r, t: ArrowType) -> bool:
         return l < r
 
+
+class Accumulator(abc.ABC):
+    @abc.abstractmethod
+    def accumulate(self, value):
+        pass
+
+    @abc.abstractmethod
+    def final_value(self) -> typing.Any:
+        pass
+
+
+class MaxAccumulator(Accumulator):
+    def __init__(self):
+        self.accumulated_values = 0
+        self.value = None
+
+    def accumulate(self, value):
+        if self.value is None or value > self.value:
+            self.value = value
+        self.accumulated_values += 1
+
+    def final_value(self) -> typing.Any:
+        return self.value
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(accumulated_values={self.accumulated_values}, value={self.value})'
+
+
+class Aggregate(PhysicalExpression, abc.ABC):
+    def __init__(self, expr: PhysicalExpression):
+        self.expr = expr
+
+    @abc.abstractmethod
+    def create_accumulator(self) -> Accumulator:
+        pass
+
+
+class Max(Aggregate):
+    def create_accumulator(self) -> Accumulator:
+        return MaxAccumulator()
+
+    def evaluate(self, input: RecordBatch) -> ColumnVector:
+        pass
+
+    def __repr__(self):
+        return self.__repr__() + f"({self.expr})"
