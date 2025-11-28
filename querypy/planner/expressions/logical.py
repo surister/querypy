@@ -1,4 +1,5 @@
 import functools
+from enum import Enum
 
 from querypy.exceptions import UnknownColumnError
 from querypy.planner.expressions import LogicalExpression
@@ -127,7 +128,7 @@ class Binary(LogicalExpression):
         self.r = r
 
     def to_field(self, input: LogicalPlan):
-        """Not implemented, the children classes will have do."""
+        """Not implemented."""
         raise NotImplementedError()
 
     def __repr__(self):
@@ -149,17 +150,47 @@ def _boolean_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpr
     return Boolean(name, op, l, r)
 
 
-boolean_operators = ["=", "!=", ">", "<", ">=", "<=", "or", "OR"]
+class BooleanOp(Enum):
+    """Represent an operation with a boolean result."""
 
-Eq = functools.partial(_boolean_expression, "eq", "=")
-Neq = functools.partial(_boolean_expression, "neq", "!=")
-Gt = functools.partial(_boolean_expression, "gt", ">")
-GtEq = functools.partial(_boolean_expression, "gteq", ">=")
-Lt = functools.partial(_boolean_expression, "lt", "<")
-LtEq = functools.partial(_boolean_expression, "lteq", "<=")
+    EQ = ("eq", "=")
+    NEQ = ("neq", "!=")
+    GT = ("gt", ">")
+    GTEQ = ("gteq", ">=")
+    LT = ("lt", "<")
+    LTEQ = ("lteq", "<=")
+    AND = ("and", "AND")
+    OR = ("or", "OR")
 
-And = functools.partial(_boolean_expression, "and", "AND")
-Or = functools.partial(_boolean_expression, "or", "OR")
+    def __init__(self, logical_name: str, symbol: str):
+        self.logical_name = logical_name
+        self.symbol = symbol
+
+
+Eq = functools.partial(
+    _boolean_expression, BooleanOp.EQ.logical_name, BooleanOp.EQ.symbol
+)
+Neq = functools.partial(
+    _boolean_expression, BooleanOp.NEQ.logical_name, BooleanOp.NEQ.symbol
+)
+Gt = functools.partial(
+    _boolean_expression, BooleanOp.GT.logical_name, BooleanOp.GT.symbol
+)
+GtEq = functools.partial(
+    _boolean_expression, BooleanOp.GTEQ.logical_name, BooleanOp.GTEQ.symbol
+)
+Lt = functools.partial(
+    _boolean_expression, BooleanOp.LT.logical_name, BooleanOp.LT.symbol
+)
+LtEq = functools.partial(
+    _boolean_expression, BooleanOp.LTEQ.logical_name, BooleanOp.LTEQ.symbol
+)
+And = functools.partial(
+    _boolean_expression, BooleanOp.AND.logical_name, BooleanOp.AND.symbol
+)
+Or = functools.partial(
+    _boolean_expression, BooleanOp.OR.logical_name, BooleanOp.OR.symbol
+)
 
 # Literals implement some python dunder methods that allow us to easily construct advanced
 # expressions more naturally, for example `Column('salary') > LiteralInteger(1000)` will return a
