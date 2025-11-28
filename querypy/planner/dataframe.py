@@ -103,14 +103,20 @@ class DataFrame:
                     r = r.replace('"', "")
                     r = logical_expression.Column(str(r))
             match chosen_op:
-                case '=':
-                    expr = logical_expression.Eq(logical_expression.Column(l.strip()), r)
-                case '>':
-                    expr = logical_expression.Gt(logical_expression.Column(l.strip()), r)
-                case '<':
-                    expr = logical_expression.Lt(logical_expression.Column(l.strip()), r)
+                case "=":
+                    expr = logical_expression.Eq(
+                        logical_expression.Column(l.strip()), r
+                    )
+                case ">":
+                    expr = logical_expression.Gt(
+                        logical_expression.Column(l.strip()), r
+                    )
+                case "<":
+                    expr = logical_expression.Lt(
+                        logical_expression.Column(l.strip()), r
+                    )
                 case _:
-                    raise Exception('Not supported')
+                    raise Exception("Not supported")
 
         return DataFrame(logical_plan.Filter(self._plan, expr))
 

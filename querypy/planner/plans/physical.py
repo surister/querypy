@@ -34,7 +34,7 @@ class Scan(PhysicalPlan):
 
 class Projection(PhysicalPlan):
     def __init__(
-            self, input: PhysicalPlan, schema: Schema, expr: list[PhysicalExpression]
+        self, input: PhysicalPlan, schema: Schema, expr: list[PhysicalExpression]
     ):
         self.input = input
         self.schema = schema
@@ -85,11 +85,11 @@ class Filter(PhysicalPlan):
 
 class HashAggregate(PhysicalPlan):
     def __init__(
-            self,
-            input: PhysicalPlan,
-            group_expr: list[PhysicalExpression],
-            aggregate_expr: list[Aggregate],
-            schema: Schema,
+        self,
+        input: PhysicalPlan,
+        group_expr: list[PhysicalExpression],
+        aggregate_expr: list[Aggregate],
+        schema: Schema,
     ):
         self.input = input
         self.group_expr = group_expr
@@ -109,7 +109,9 @@ class HashAggregate(PhysicalPlan):
             # the vectors that will be grouped.
             group_input = [expr.evaluate(batch) for expr in self.group_expr]
             # the columns that will be aggregated
-            aggr_input_values = [aggr.expr.evaluate(batch) for aggr in self.aggregate_expr]
+            aggr_input_values = [
+                aggr.expr.evaluate(batch) for aggr in self.aggregate_expr
+            ]
 
             for row_i in range(batch.row_count):
                 # a tuple containing keys for a group, for example in a schema of 'id' and 'name'
@@ -125,14 +127,13 @@ class HashAggregate(PhysicalPlan):
 
                 accumulators = groups.setdefault(
                     group_keys,
-                    [expr.create_accumulator() for expr in self.aggregate_expr]
+                    [expr.create_accumulator() for expr in self.aggregate_expr],
                 )
 
                 # accumulate values, every accumulator will only see the rows of it group_keys
                 for idx, accumulator in enumerate(accumulators):
                     value = aggr_input_values[idx].get_value(row_i)
                     accumulator.accumulate(value)
-
 
             # at this point, data is already accumulated, but we only have a dictionary
             # of unique key groups, and it's accumulated (from the aggregations) values, like:

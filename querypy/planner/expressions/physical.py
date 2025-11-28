@@ -134,7 +134,11 @@ class Accumulator(abc.ABC):
         pass
 
     def __repr__(self):
-        return self.__class__.__name__ + f'(accumulated_values={self.accumulated_values}, value={self.value})'
+        return (
+            self.__class__.__name__
+            + f"(accumulated_values={self.accumulated_values}, value={self.value})"
+        )
+
 
 class MaxAccumulator(Accumulator):
     def __init__(self):
@@ -179,6 +183,7 @@ class Max(Aggregate):
 
     def __repr__(self):
         return self.__repr__() + f"({self.expr})"
+
 
 class Count(Aggregate):
     def create_accumulator(self) -> Accumulator:

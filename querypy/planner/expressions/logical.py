@@ -37,6 +37,7 @@ class Column(LogicalExpression):
         QueryEngineError
             If the column does not exist in the logical plan schema.
         """
+        print(input.get_schema())
         for field in input.get_schema().fields:
             if field.name == self.name:
                 return field
@@ -66,8 +67,7 @@ class LiteralString(Literal):
         self.value = value
 
     def to_field(self, input: LogicalPlan):
-        # return Field(self.expr, ArrowTypes.StringType)
-        raise Exception("A literal cannot be a field")
+        return Field(self.value, ArrowTypes.StringType)
 
     def __repr__(self):
         return repr(self.value)
@@ -91,6 +91,9 @@ class LiteralFloat(Literal):
 
     def __init__(self, value: float):
         self.value = value
+
+    def __repr__(self):
+        return repr(self.value)
 
     def to_field(self, _: LogicalPlan):
         return Field(str(self.value), ArrowTypes.FloatType)
@@ -249,7 +252,9 @@ class Aggregate(LogicalExpression):
         self.expr = expr
 
     def to_field(self, input: LogicalPlan):
-        return Field(f'{self.name.lower()}_{str(self.expr)}', self.expr.to_field(input).type)
+        return Field(
+            f"{self.name.lower()}_{str(self.expr)}", self.expr.to_field(input).type
+        )
 
     def __repr__(self):
         return f"{self.name}({self.expr})"
@@ -259,7 +264,8 @@ def _aggregate_expression(name: str, input: LogicalExpression):
     """Constructor for aggregate expressions"""
     return Aggregate(name, input)
 
-Count = functools.partial(_aggregate_expression,"COUNT")
+
+Count = functools.partial(_aggregate_expression, "COUNT")
 Max = functools.partial(_aggregate_expression, "MAX")
 Min = functools.partial(_aggregate_expression, "MIN")
 Sum = functools.partial(_aggregate_expression, "SUM")
