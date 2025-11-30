@@ -75,8 +75,8 @@ class CSVDataSource(DataSource):
         with open(self.path) as f:
             reader = csv.reader(f)
             columns = next(reader)
-            columns = [col for col in columns if col in projection]
-
+            if projection:
+                columns = [col for col in columns if col in projection]
             first_row = next(reader)
 
             fields = []
