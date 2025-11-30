@@ -1,4 +1,4 @@
-def print_tree(node, indent: int = 0):
+def get_text_tree(node, indent: int = 0):
     """
     Prints a tree. Every node of the tree is expected to have a children
     attribute.
@@ -18,6 +18,6 @@ def print_tree(node, indent: int = 0):
     output += repr(node)
     output += "\n"
     for children in node.children():
-        tree = print_tree(children, indent + 1)
+        tree = get_text_tree(children, indent + 1)
         output += tree
     return output

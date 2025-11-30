@@ -136,16 +136,16 @@ def test_bool_operators():
     l = DummyExpr("L")
     r = DummyExpr("R")
 
-    for expected_name, (ctor, expected_op) in cases.items():
-        expr = ctor(l, r)
+    for expected_name, (operator, operator_symbol) in cases.items():
+        expr = operator(l, r)
 
         assert isinstance(expr, Boolean)
         assert expr.name == expected_name
-        assert expr.op == expected_op
+        assert expr.op == operator_symbol
         assert expr.l is l
         assert expr.r is r
 
-        assert repr(expr) == f"{l!r} {expected_op} {r!r}"
+        assert repr(expr) == f"{l!r} {operator_symbol} {r!r}"
 
         field = expr.to_field(input=MagicMock())
         assert hasattr(field, "name")

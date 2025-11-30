@@ -30,8 +30,11 @@ class Column(PhysicalExpression):
     def __repr__(self):
         return f"#{self.i}"
 
+class Literal(PhysicalExpression):
+    def __repr__(self):
+        return repr(self.value)
 
-class LiteralString(PhysicalExpression):
+class LiteralString(Literal):
     """
     Represents a vector of literal strings.
     """
@@ -43,7 +46,7 @@ class LiteralString(PhysicalExpression):
         return LiteralValueVector(ArrowTypes.StringType, self.value, input.row_count)
 
 
-class LiteralInteger(PhysicalExpression):
+class LiteralInteger(Literal):
     """
     Represents a vector of literal integers.
     """
@@ -55,7 +58,7 @@ class LiteralInteger(PhysicalExpression):
         return LiteralValueVector(ArrowTypes.Int32Type, self.value, input.row_count)
 
 
-class LiteralFloat(PhysicalExpression):
+class LiteralFloat(Literal):
     """
     Represents a vector of literal integers.
     """
@@ -87,6 +90,8 @@ class Binary(PhysicalExpression):
             )
         return ll, lr
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}{self.l, self.r}'
 
 class Boolean(Binary):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:

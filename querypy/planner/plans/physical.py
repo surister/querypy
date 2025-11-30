@@ -82,6 +82,8 @@ class Filter(PhysicalPlan):
             new_record_batches.append(RecordBatch(batch.schema, new_fields))
         return new_record_batches
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}: {self.expr!r}'
 
 class HashAggregate(PhysicalPlan):
     def __init__(
