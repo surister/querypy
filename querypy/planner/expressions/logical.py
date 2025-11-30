@@ -38,7 +38,6 @@ class Column(LogicalExpression):
         QueryEngineError
             If the column does not exist in the logical plan schema.
         """
-        print(input.get_schema())
         for field in input.get_schema().fields:
             if field.name == self.name:
                 return field

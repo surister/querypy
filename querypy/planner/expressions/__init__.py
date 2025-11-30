@@ -73,7 +73,7 @@ class PhysicalPlan(abc.ABC):
         pass
 
     def __repr__(self):
-        return self.__class__.__name__
+        return f"{self.__class__.__name__}: "
 
 
 class PhysicalExpression(abc.ABC):

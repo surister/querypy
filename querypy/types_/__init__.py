@@ -233,7 +233,10 @@ class RecordBatch:
         return len(self.fields)
 
     def get_field(self, i):
-        return self.fields[i]
+        try:
+            return self.fields[i]
+        except IndexError as e:
+            raise IndexError(f"Available columns are: {self.fields}") from e
 
     def __repr__(self):
         return f"{self.__class__.__name__}(fields={self.fields}, columns={self.column_names()}, num_cols={self.column_count}, row_count={self.row_count}"

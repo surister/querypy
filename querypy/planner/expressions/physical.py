@@ -30,9 +30,11 @@ class Column(PhysicalExpression):
     def __repr__(self):
         return f"#{self.i}"
 
+
 class Literal(PhysicalExpression):
     def __repr__(self):
         return repr(self.value)
+
 
 class LiteralString(Literal):
     """
@@ -91,7 +93,8 @@ class Binary(PhysicalExpression):
         return ll, lr
 
     def __repr__(self):
-        return f'{self.__class__.__name__}{self.l, self.r}'
+        return f"{self.__class__.__name__}{self.l, self.r}"
+
 
 class Boolean(Binary):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:

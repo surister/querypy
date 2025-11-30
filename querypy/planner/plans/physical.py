@@ -83,7 +83,8 @@ class Filter(PhysicalPlan):
         return new_record_batches
 
     def __repr__(self):
-        return f'{self.__class__.__name__}: {self.expr!r}'
+        return f"{self.__class__.__name__}: {self.expr!r}"
+
 
 class HashAggregate(PhysicalPlan):
     def __init__(
@@ -155,3 +156,8 @@ class HashAggregate(PhysicalPlan):
                     columns[num_group_cols + j].append(accum.final_value())
             rbs.append(RecordBatch.from_pylists(self.schema, columns))
         return rbs
+
+    def __repr__(self):
+        return super().__repr__() + (
+            f"group_by: {self.group_expr}; aggregates: {self.aggregate_expr}"
+        )
