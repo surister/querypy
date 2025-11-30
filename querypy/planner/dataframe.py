@@ -4,7 +4,7 @@ from querypy.planner.expressions import (
     LogicalPlan,
     logical as logical_expression,
 )
-from querypy.planner.expressions.logical import Column
+from querypy.planner.expressions.logical import Column, BooleanOp
 from querypy.planner.plans import logical as logical_plan
 from querypy.types_ import Schema
 
@@ -79,9 +79,7 @@ class DataFrame:
             l, r = None, None
             # this parsing logic is very easy to break, but it's fine as we don't
             # want to implement more complex parsing capabilities.
-            for op in logical_expression.boolean_operators[
-                ::-1
-            ]:  # try to match long operators first
+            for op in map(lambda op: op.symbol, BooleanOp):
                 if op in expr:
                     l, r = expr.split(op)
                     chosen_op = op
