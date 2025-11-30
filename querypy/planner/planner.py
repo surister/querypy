@@ -75,8 +75,14 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                                 create_physical_expr(expr.expr, plan.input)
                             )
                         )
+                    case "AVG":
+                        aggr.append(
+                            physical_expressions.Count(
+                                create_physical_expr(expr.expr, plan.input)
+                            )
+                        )
                     case _:
-                        ...
+                        raise NotImplementedError()
             return HashAggregate(
                 input,
                 group_expr=group_expr,

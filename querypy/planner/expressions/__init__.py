@@ -96,3 +96,6 @@ class PhysicalExpression(abc.ABC):
         modified data.
         """
         pass
+
+    def __repr__(self):
+        return self.__class__.__name__
