@@ -83,6 +83,7 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                         )
                     case _:
                         raise NotImplementedError()
+
             return HashAggregate(
                 input,
                 group_expr=group_expr,
