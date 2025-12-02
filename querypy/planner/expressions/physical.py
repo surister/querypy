@@ -96,6 +96,35 @@ class Binary(PhysicalExpression):
         return f"{self.__class__.__name__}{self.l, self.r}"
 
 
+class MathOperation(Binary):
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        ll, lr = super().evaluate(input)
+        result = [
+            self.operate(ll.get_value(i), lr.get_value(i)) for i in range(len(ll))
+        ]
+        return ColumnVector(ArrowTypes.from_pyvalue(result[0]), result, ll.size)
+
+
+class Subtract(MathOperation):
+    def operate(self, l, r):
+        return l - r
+
+
+class Add(MathOperation):
+    def operate(self, l, r):
+        return l + r
+
+
+class Multiply(MathOperation):
+    def operate(self, l, r):
+        return l * r
+
+
+class Divide(MathOperation):
+    def operate(self, l, r):
+        return l / r
+
+
 class Boolean(Binary):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
         ll, lr = super().evaluate(input)

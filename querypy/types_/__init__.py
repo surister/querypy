@@ -80,6 +80,8 @@ class ArrowTypes(metaclass=NamedParameters):
                 return cls.StringType
             case int():
                 return cls.Int32Type
+            case float():
+                return cls.FloatType
             case _:
                 raise Exception(f"Type {v} not supported")
 

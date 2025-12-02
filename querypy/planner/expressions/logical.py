@@ -240,13 +240,30 @@ def _math_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpress
     return MathExpr(name, op, l, r)
 
 
+class MathOp(Enum):
+    """Represent an operation with a numeric result."""
+
+    Add = ("add", "+")
+    Subtract = ("sub", "-")
+    Multiply = ("mul", "*")
+    Divide = ("div", "/")
+
+    def __init__(self, logical_name: str, symbol: str):
+        self.logical_name = logical_name
+        self.symbol = symbol
+
+
 # There are other mathematical expressions that could be implemented
 # but are not because no particular reason other than being brief.
 # pr's are welcome.
-Add = functools.partial(_math_expression, "add", "+")
-Subtract = functools.partial(_math_expression, "subtract", "-")
-Mult = functools.partial(_math_expression, "multiply", "*")
-Div = functools.partial(_math_expression, "divide", "/")
+Add = functools.partial(_math_expression, MathOp.Add.name, MathOp.Add.symbol)
+Subtract = functools.partial(
+    _math_expression, MathOp.Subtract.name, MathOp.Subtract.symbol
+)
+Multiply = functools.partial(
+    _math_expression, MathOp.Multiply.name, MathOp.Multiply.symbol
+)
+Divide = functools.partial(_math_expression, MathOp.Divide.name, MathOp.Divide.symbol)
 
 Column.__add__ = lambda s, o: Add(s, o)
 LiteralString.__add__ = lambda s, o: Add(s, o)

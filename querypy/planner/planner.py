@@ -7,6 +7,7 @@ from querypy.planner.expressions import (
 )
 from querypy.planner.expressions import logical as logical_expressions
 from querypy.planner.expressions import physical as physical_expressions
+from querypy.planner.expressions.logical import MathOp
 from querypy.planner.plans import logical as logical_plans
 from querypy.planner.plans import physical as physical_plans
 from querypy.planner.plans.physical import HashAggregate
@@ -28,7 +29,7 @@ def create_physical_expr(
             return physical_expressions.LiteralInteger(expr.value)
         case logical_expressions.LiteralFloat():
             return physical_expressions.LiteralFloat(expr.value)
-        case logical_expressions.Binary():
+        case logical_expressions.Boolean():
             l = create_physical_expr(expr.l, input)
             r = create_physical_expr(expr.r, input)
             match expr.name:
@@ -38,6 +39,19 @@ def create_physical_expr(
                     return physical_expressions.Gt(l, r)
                 case "lt":
                     return physical_expressions.Lt(l, r)
+        case logical_expressions.MathExpr():
+            l = create_physical_expr(expr.l, input)
+            r = create_physical_expr(expr.r, input)
+            match expr.name:
+                case MathOp.Subtract.name:
+                    return physical_expressions.Subtract(l, r)
+                case MathOp.Add.name:
+                    return physical_expressions.Add(l, r)
+                case MathOp.Multiply.name:
+                    return physical_expressions.Multiply(l, r)
+                case MathOp.Divide.name:
+                    return physical_expressions.Divide(l, r)
+
     return
 
 
