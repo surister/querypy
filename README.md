@@ -1,24 +1,26 @@
-Querypy is a query engine based on Columnar data resembling Arrow structures 
-(e.g. Recordbatches).
+Querypy is a query engine based on Columnar data, with inspiration on [Apache Arrow](https://arrow.apache.org/).
 
-It is a pure python implementation based on the book [How query engines work by 
+It is a pure Python implementation based on the book [How query engines work by 
 Andy Groove](https://www.howqueryengineswork.com).
 This is for educational purposes only, for no reason one should use this for any real work.
 
+<img width="4580" height="1504" alt="b(16)" src="https://github.com/user-attachments/assets/b6b87d65-0270-439e-8c58-58d3977c3448" />
+
+
 ## What's implemented:
 A logical layer with:
-* Logical expressions: Column, Literal, Boolean/Binary
-(Eq, Neq, Gt, GtEq, Lt, LtEq, And, Or), Math (Add, Subtract, Mult, Div), 
-Aggregates (GroupBy, Count, Max, Min, Sum, Avg).
-* Logical plans: Scan, Projection (select), Filter, Aggregate.
+* Logical expressions: `Column`, `Literal`, `Boolean` and `Binary` expressions
+(`Eq`, `Neq`, `Gt`, `GtEq`, `Lt`, `LtEq`, `And`, `Or`), Math expressions (`Add`, `Subtract`, `Mult`, `Div`), and
+`Aggregates` expressions (`GroupBy`, `Count`, `Max`, `Min`, `Sum`, `Avg`).
+* Logical plans: `Scan`, `Projection` (select), `Filter`, `Projection`.
 
 A columnar based physical layer with:
-* Physical expressions: Column, Literal, Boolean/Binary, Aggregate.
-* Physical plans: Scan, Projection(select), Filter, HashAggregate.
+* Physical expressions: `Column`, `Literal`, `Boolean` and `Binary` expressions, and `Aggregate`.
+* Physical plans: `Scan`, `Projection` (select), `Filter`, `HashAggregate`.
 
 A type system with:
-ArrowTypes (Bool, Ints, Floats, Strings...), ColumnVector, LiteralValueVector,
-Field, Schema and RecordBatch.
+`ArrowTypes` (`Bool`, `Ints`, `Ints`, `Strings`...), `ColumnVector`, `LiteralValueVector`,
+`Field`, `Schema` and `RecordBatch`.
 
 A planner that translates a logical plan into a physical plan.
 
