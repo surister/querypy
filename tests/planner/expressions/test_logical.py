@@ -3,8 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from querypy.exceptions import UnknownColumnError
-from querypy.planner.expressions import LogicalPlan
+from querypy.exceptions import UnknownColumnError, AlreadyExistsColumnError
 from querypy.planner.expressions.logical import (
     Column,
     LiteralString,
@@ -20,25 +19,10 @@ from querypy.planner.expressions.logical import (
     And,
     Or,
     BooleanOp,
+    Alias,
 )
 from querypy.types_ import Schema, Field, ArrowTypes
-
-
-def create_logical_plan(children: list = None, schema: Schema = None) -> LogicalPlan:
-    class SomeLogicalPlan(LogicalPlan):
-        def __init__(self, children: list = None):
-            self._children = children or []
-            self._schema = schema or []
-
-        def children(self) -> list["LogicalPlan"]:
-            return self._children
-
-        def get_schema(self) -> Schema:
-            return self._schema
-
-    t = SomeLogicalPlan(children)
-    t._schema = schema
-    return t
+from tests import create_logical_plan
 
 
 def test_column():
@@ -150,3 +134,21 @@ def test_bool_operators():
         field = expr.to_field(input=MagicMock())
         assert hasattr(field, "name")
         assert field.name == expected_name
+
+
+def test_alias():
+    field_name = "somefiled"
+    expected_name = "somenewname"
+    expected_type = ArrowTypes.StringType
+    plan = create_logical_plan(
+        schema=Schema([Field(field_name, ArrowTypes.StringType)])
+    )
+
+    field = Alias(expected_name, Column(field_name)).to_field(plan)
+    assert isinstance(field, Field)
+    assert field.name == expected_name
+    assert field.type == expected_type
+
+    with pytest.raises(AlreadyExistsColumnError):
+        # We cannot alias if the column already exists
+        Alias(field_name, Column(field_name)).to_field(plan)

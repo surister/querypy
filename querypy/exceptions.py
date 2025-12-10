@@ -11,3 +11,8 @@ class LogicalError(QueryEngineError):
 class UnknownColumnError(QueryEngineError):
     def __init__(self, col: str):
         super().__init__(f"No column named {col!r}")
+
+
+class AlreadyExistsColumnError(QueryEngineError):
+    def __init__(self, col: str):
+        super().__init__(f"Column {col} already exists")

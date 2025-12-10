@@ -30,7 +30,8 @@ class DataFrame:
         self._plan = plan
 
     def select(
-        self, columns: list[logical_expression.Column] | list[str]
+        self,
+        columns: list[logical_expression.Column | logical_expression.Alias] | list[str],
     ) -> "DataFrame":
         """Selects the given columns.
 

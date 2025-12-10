@@ -1,7 +1,7 @@
 import functools
 from enum import Enum
 
-from querypy.exceptions import UnknownColumnError
+from querypy.exceptions import UnknownColumnError, AlreadyExistsColumnError
 from querypy.planner.expressions import LogicalExpression
 from querypy.planner.expressions import LogicalPlan
 from querypy.types_ import ArrowTypes
@@ -317,3 +317,24 @@ Max = functools.partial(_aggregate_expression, "MAX")
 Min = functools.partial(_aggregate_expression, "MIN")
 Sum = functools.partial(_aggregate_expression, "SUM")
 Avg = functools.partial(_aggregate_expression, "AVG")
+
+
+class Alias(LogicalExpression):
+    """
+    Renames the given column to the new name if unless it's already in use.
+    """
+
+    def __init__(self, name: str, expr: Column):
+        self.name = name
+        self.expr = expr
+
+    def to_field(self, input: "LogicalPlan") -> Field:
+        for field in input.get_schema().fields:
+            if field.name == self.name and field is not self:
+                raise AlreadyExistsColumnError(self.name)
+
+        field = self.expr.to_field(input)
+        return Field(self.name, field.type)
+
+    def __repr__(self):
+        return f"{self.expr} as #{self.name}"

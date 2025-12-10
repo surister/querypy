@@ -23,6 +23,12 @@ def create_physical_expr(
             if i < 0:
                 raise UnknownColumnError(f"{i}")
             return physical_expressions.Column(i)
+        case logical_expressions.Alias():
+            # Obtain the index by the original name, not the aliased.
+            i = input.get_schema().get_index_by_name(expr.expr.name)
+            if i < 0:
+                raise UnknownColumnError(f"{i}")
+            return physical_expressions.Column(i)
         case logical_expressions.LiteralString():
             return physical_expressions.LiteralString(expr.value)
         case logical_expressions.LiteralInteger():

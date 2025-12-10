@@ -58,6 +58,9 @@ class LogicalExpression(abc.ABC):
         """
         pass
 
+    def __repr__(self):
+        return self.__class__.__name__
+
 
 class PhysicalPlan(abc.ABC):
     @abc.abstractmethod

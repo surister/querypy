@@ -249,3 +249,9 @@ class Avg(Aggregate):
 
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         pass
+
+
+class Alias(Column):
+    """Renames the column to the new name. It does not implement
+    anything in the physical layer as this is just a metadata change
+    that happens on the logical layer."""
