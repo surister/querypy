@@ -110,4 +110,12 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                 aggregate_expr=aggr,
                 schema=plan.get_schema(),
             )
+        case logical_plans.OrderBy():
+            input = create_physical_plan(plan.input)
+            order_by = [
+                (create_physical_expr(expr, plan.input), ascending)
+                for (expr, ascending) in plan.order_by
+            ]
+            return physical_plans.OrderBy(input, order_by)
     return
+    raise NotImplementedError(f"Physical plan is not implemented for {type(plan)}")

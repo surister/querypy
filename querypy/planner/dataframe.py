@@ -149,6 +149,16 @@ class DataFrame:
     def logical_plan(self) -> LogicalPlan:
         return self._plan
 
+    def order_by(
+        self, columns: list[tuple[str, bool]] | list[tuple[LogicalExpression, bool]]
+    ):
+        if columns and isinstance(columns[0][0], str):
+            columns = [
+                (logical_expression.Column(col), ascending)
+                for col, ascending in columns
+            ]
+        return DataFrame(logical_plan.OrderBy(self._plan, columns))
+
     @classmethod
     def scan_csv(cls, path: str, fields: list[str] = None) -> "DataFrame":
         """Reads the `fields` from a csv files in a given `path`.

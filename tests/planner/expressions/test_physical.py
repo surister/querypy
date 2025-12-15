@@ -11,10 +11,10 @@ from querypy.planner.expressions.physical import (
     Column,
 )
 from querypy.planner.planner import create_physical_expr
-from querypy.planner.plans.physical import Projection
+from querypy.planner.plans.physical import Projection, OrderBy
 from querypy.planner.expressions import logical
 from querypy.types_ import RecordBatch, Schema, Field, ArrowTypes, ColumnVector
-from tests import create_rb
+from tests import create_rb, create_logical_test_plan, create_physical_test_plan
 
 
 def test_math():
@@ -56,3 +56,33 @@ def test_column():
 
 def test_alias():
     assert issubclass(Alias, Column)
+
+
+def test_orderby():
+    a = [1, 2, 3]
+    b = ["c", "b", "a"]
+    data = [a, b]
+    plan = create_physical_test_plan(data)
+    order_by_a = data.index(a)
+    order_by_b = data.index(b)
+
+    orderby = OrderBy(plan, order_by=[[Column(order_by_a), False]])
+
+    assert plan.schema() == orderby.schema()
+    assert orderby.children()[0] == plan
+
+    rb = list(orderby.execute())[0]
+    assert rb.get_field(order_by_a) == [3, 2, 1]
+
+    orderby.order_by[0][1] = True
+    rb = list(orderby.execute())[0]
+    assert rb.get_field(order_by_a) == [1, 2, 3]
+
+    # Other datatype than int; str.
+    orderby = OrderBy(plan, order_by=[[Column(order_by_b), False]])
+    rb = list(orderby.execute())[0]
+    assert rb.get_field(order_by_b) == ["c", "b", "a"]
+
+    orderby.order_by[0][1] = True
+    rb = list(orderby.execute())[0]
+    assert rb.get_field(order_by_b) == ["a", "b", "c"]

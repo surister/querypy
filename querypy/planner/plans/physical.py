@@ -161,3 +161,38 @@ class HashAggregate(PhysicalPlan):
         return super().__repr__() + (
             f"group_by: {self.group_expr}; aggregates: {self.aggregate_expr}"
         )
+
+
+class OrderBy(PhysicalPlan):
+    def __init__(
+        self, input: PhysicalPlan, order_by: list[tuple[PhysicalExpression, bool]]
+    ):
+        self.input = input
+        self.order_by = order_by
+
+    def schema(self) -> Schema:
+        return self.input.schema()
+
+    def children(self) -> list["PhysicalPlan"]:
+        return [self.input]
+
+    def execute(self) -> Generator[RecordBatch, Any, None]:
+        for batch in self.input.execute():
+            ascending = self.order_by[0][1]
+            order = sorted(
+                range(batch.row_count),
+                key=lambda i: tuple(
+                    batch.get_field(col.i).get_value(i) for col, _ in self.order_by
+                ),
+                reverse=ascending == False,
+            )
+
+            for i, field in enumerate(batch.fields):
+                field = ColumnVector(
+                    field.type, [field.get_value(v) for v in order], field.size
+                )
+                batch.fields[i] = field
+            yield batch
+
+    def __repr__(self):
+        return super().__repr__() + repr(self.order_by)

@@ -2,7 +2,9 @@ from querypy.planner.expressions import LogicalPlan, PhysicalPlan
 from querypy.types_ import Schema, RecordBatch, ArrowTypes, Field, ColumnVector
 
 
-def create_logical_plan(children: list = None, schema: Schema = None) -> LogicalPlan:
+def create_logical_test_plan(
+    children: list = None, schema: Schema = None
+) -> LogicalPlan:
     class SomeLogicalPlan(LogicalPlan):
         def __init__(self, children: list = None):
             self._children = children or []
@@ -40,7 +42,7 @@ def create_rb(values: list[list] | list) -> RecordBatch:
     return rb
 
 
-def create_plan(values: list[list] | list) -> PhysicalPlan:
+def create_physical_test_plan(values: list[list] | list) -> PhysicalPlan:
     class DummyPlan(PhysicalPlan):
         def __init__(self, rb: RecordBatch):
             self.record_batch = rb

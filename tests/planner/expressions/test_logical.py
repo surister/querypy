@@ -21,8 +21,9 @@ from querypy.planner.expressions.logical import (
     BooleanOp,
     Alias,
 )
+from querypy.planner.plans.logical import OrderBy
 from querypy.types_ import Schema, Field, ArrowTypes
-from tests import create_logical_plan
+from tests import create_logical_test_plan
 
 
 def test_column():
@@ -38,14 +39,14 @@ def test_column_field():
     schema = Schema([Field(expected_name, expected_type)])
     c = Column(expected_name)
 
-    plan = create_logical_plan(schema=schema)
+    plan = create_logical_test_plan(schema=schema)
 
     field = c.to_field(plan)
     assert isinstance(field, Field)
     assert field.name == expected_name
     assert field.type == expected_type
 
-    plan = create_logical_plan(schema=Schema([]))
+    plan = create_logical_test_plan(schema=Schema([]))
     with pytest.raises(UnknownColumnError):
         c.to_field(plan)
 
@@ -140,7 +141,7 @@ def test_alias():
     field_name = "somefiled"
     expected_name = "somenewname"
     expected_type = ArrowTypes.StringType
-    plan = create_logical_plan(
+    plan = create_logical_test_plan(
         schema=Schema([Field(field_name, ArrowTypes.StringType)])
     )
 
@@ -152,3 +153,16 @@ def test_alias():
     with pytest.raises(AlreadyExistsColumnError):
         # We cannot alias if the column already exists
         Alias(field_name, Column(field_name)).to_field(plan)
+
+def test_orderby():
+    field_name = "somefiled"
+    orderby_cols = [(Column(field_name), True), ]
+    plan = create_logical_test_plan(
+        schema=Schema([Field(field_name, ArrowTypes.StringType)])
+    )
+
+    orderby = OrderBy(plan, order_by=orderby_cols)
+    assert orderby.get_schema() == plan.get_schema()
+    assert orderby.input == plan
+    assert orderby.children()[0] == plan
+    assert orderby.order_by == orderby_cols

@@ -112,3 +112,21 @@ class Aggregate(LogicalPlan):
             super().__repr__()
             + f"(group_by={self.group_by}, aggregate_by={self.aggregate})"
         )
+
+
+class OrderBy(LogicalPlan):
+    def __init__(self, input: LogicalPlan, order_by: list[tuple[Column, bool]]):
+        self.input = input
+        self.order_by = order_by
+
+    def get_schema(self) -> Schema:
+        return self.input.get_schema()
+
+    def children(self) -> list["LogicalPlan"]:
+        return [self.input]
+
+    def __repr__(self):
+        return (
+            super().__repr__()
+            + f"({[(col, ascending) for col, ascending in self.order_by]})"
+        )

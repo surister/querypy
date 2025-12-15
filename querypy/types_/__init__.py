@@ -122,6 +122,11 @@ class ColumnVector(ColumnVectorABC):
             raise IndexError()
         return self.value[i]
 
+    def __eq__(self, other):
+        if isinstance(other, list):
+            return self.value == other
+        return self == other
+
 
 class LiteralValueVector(ColumnVectorABC):
     """
@@ -234,11 +239,16 @@ class RecordBatch:
     def column_count(self):
         return len(self.fields)
 
-    def get_field(self, i):
+    def get_field(self, i) -> ColumnVector:
         try:
             return self.fields[i]
         except IndexError as e:
-            raise IndexError(f"Available columns are: {self.fields}") from e
+            raise IndexError(
+                f"Available columns are: {self.column_names()} not {i}"
+            ) from e
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(fields={self.fields}, columns={self.column_names()}, num_cols={self.column_count}, row_count={self.row_count}"
+        return (
+            f"{self.__class__.__name__}(columns={self.column_names()}, "
+            f"num_cols={self.column_count}, row_count={self.row_count}, fields={self.fields}"
+        )
