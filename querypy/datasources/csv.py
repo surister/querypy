@@ -97,6 +97,7 @@ class CSVDataSource(DataSource):
                     for i, value in enumerate(next(reader)):
                         if i < len(columns):
                             v = int(value) if value.isdigit() else value
+                            v = None if v == "" else v
                             values[i].append(v)
             except StopIteration:
                 pass

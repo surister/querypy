@@ -10,7 +10,7 @@ class ArrowType:
         self.name = name
 
     def __repr__(self):
-        return self.name
+        return self.name or self.__class__.__name__
 
 
 class IntType(ArrowType):
@@ -72,6 +72,7 @@ class ArrowTypes(metaclass=NamedParameters):
     FloatType = FloatingPoint(FloatingPointPrecision.SINGLE)
     DoubleType = FloatingPoint(FloatingPointPrecision.DOUBLE)
     StringType = ArrowType()
+    NoneType = ArrowType()
 
     @classmethod
     def from_pyvalue(cls, v):
@@ -82,6 +83,8 @@ class ArrowTypes(metaclass=NamedParameters):
                 return cls.Int32Type
             case float():
                 return cls.FloatType
+            case None:
+                return cls.NoneType
             case _:
                 raise Exception(f"Type {v} not supported")
 
