@@ -82,12 +82,12 @@ class CSVDataSource(DataSource):
             fields = []
             values = [[] for _ in range(len(columns))]
 
-            for name, value in zip(columns, first_row):
+            for i, (name, value) in enumerate(zip(columns, first_row)):
                 v = int(value) if value.isdigit() else value
                 fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
 
                 # Append the first row.
-                values[first_row.index(value)].append(v)
+                values[i].append(v)
 
             schema = Schema(fields)
 
