@@ -101,8 +101,8 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                                 create_physical_expr(expr.expr, plan.input)
                             )
                         )
-                    case _:
-                        raise NotImplementedError()
+                    case _ as e:
+                        raise NotImplementedError(f"Not implemented for {e}")
 
             return HashAggregate(
                 input,
