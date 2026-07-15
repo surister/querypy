@@ -111,6 +111,10 @@ class HashAggregate(PhysicalPlan):
         for batch in self.input.execute():
             # the vectors that will be grouped.
             group_input = [expr.evaluate(batch) for expr in self.group_expr]
+            assert len({obj.size for obj in group_input}) <= 1, \
+                (f"Batches have different lengths "
+                 f"{list(map(lambda x: x.size, group_input))}")
+
             # the columns that will be aggregated
             aggr_input_values = [
                 aggr.expr.evaluate(batch) for aggr in self.aggregate_expr
@@ -119,7 +123,7 @@ class HashAggregate(PhysicalPlan):
             for row_i in range(batch.row_count):
                 # a tuple containing keys for a group, for example in a schema of 'id' and 'name'
                 # it could be (1, 'John'). This key group will serve as keys for a grouping
-                # that will be used for storing the appropiate accumulators.
+                # that will be used for storing the appropriate accumulators.
                 #
                 # the total group_keys will be the total number of unique group keys.
 
