@@ -10,7 +10,7 @@ from querypy.planner.expressions.physical import (
     Divide,
     Add,
     Alias,
-    Column, Aggregate, Max, Avg, Count
+    Column, Max, Avg, Count, Sum
 )
 from querypy.planner.planner import create_physical_expr
 from querypy.planner.plans.physical import Projection, OrderBy, HashAggregate
@@ -127,3 +127,14 @@ def test_aggregations():
 
     assert (aggr_result[0].fields
             == [['c', 'b', 'a'], [2, 1, 3]])
+
+    # Sum
+    aggr_result = HashAggregate(
+        dummy_plan,
+        group_expr=[Column(1)],
+        aggregate_expr=[Sum(Column(0))],
+        schema=dummy_plan.schema()
+    ).execute()
+
+    assert (aggr_result[0].fields
+            == [['c', 'b', 'a'], [3, 2, 38]])

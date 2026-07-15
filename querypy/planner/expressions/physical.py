@@ -214,6 +214,17 @@ class AvgAccumulator(Accumulator):
     def final_value(self) -> typing.Any:
         return self.total_value / self.count
 
+class SumAccumulator(Accumulator):
+    def __init__(self):
+        self.total_value = 0
+
+    def accumulate(self, value):
+        self.total_value += value
+
+    def final_value(self) -> typing.Any:
+        return self.total_value
+
+
 
 class Aggregate(PhysicalExpression, abc.ABC):
     def __init__(self, expr: PhysicalExpression):
@@ -246,6 +257,13 @@ class Count(Aggregate):
 class Avg(Aggregate):
     def create_accumulator(self) -> Accumulator:
         return AvgAccumulator()
+
+    def evaluate(self, input: RecordBatch) -> ColumnVector:
+        pass
+
+class Sum(Aggregate):
+    def create_accumulator(self) -> Accumulator:
+        return SumAccumulator()
 
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         pass

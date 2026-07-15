@@ -101,6 +101,12 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                                 create_physical_expr(expr.expr, plan.input)
                             )
                         )
+                    case "SUM":
+                        aggr.append(
+                            physical_expressions.Sum(
+                                create_physical_expr(expr.expr, plan.input)
+                            )
+                        )
                     case _ as e:
                         raise NotImplementedError(f"Not implemented for {e}")
 
