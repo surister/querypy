@@ -130,7 +130,7 @@ def test_bool_operators():
         assert expr.l is l
         assert expr.r is r
 
-        assert repr(expr) == f"{l!r} {operator_symbol} {r!r}"
+        assert repr(expr) == f"({l!r} {operator_symbol} {r!r})"
 
         field = expr.to_field(input=MagicMock())
         assert hasattr(field, "name")

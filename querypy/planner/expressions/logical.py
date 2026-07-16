@@ -131,7 +131,7 @@ class Binary(LogicalExpression):
         raise NotImplementedError()
 
     def __repr__(self):
-        return f"{self.l} {self.op} {self.r}"
+        return f"({self.l} {self.op} {self.r})"
 
 
 class Boolean(Binary):
@@ -232,7 +232,8 @@ class MathExpr(Binary):
     """A mathematical expression."""
 
     def to_field(self, input: LogicalPlan) -> Field:
-        return Field(self.name, self.l.to_field(input).type)
+        # name is like in postgres
+        return Field('?column?', self.l.to_field(input).type)
 
 
 def _math_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpression):
@@ -324,9 +325,9 @@ class Alias(LogicalExpression):
     Renames the given column to the new name if unless it's already in use.
     """
 
-    def __init__(self, name: str, expr: Column):
+    def __init__(self, name: str, old_name: str | Column):
         self.name = name
-        self.expr = expr
+        self.expr = Column(old_name) if isinstance(old_name, str) else old_name
 
     def to_field(self, input: "LogicalPlan") -> Field:
         for field in input.get_schema().fields:

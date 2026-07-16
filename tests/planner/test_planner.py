@@ -1,7 +1,9 @@
 import pytest
 
 from querypy.exceptions import UnknownColumnError
-from querypy.planner.expressions.logical import Alias, Column
+from querypy.planner.expressions.logical import Alias, Column, Subtract, \
+    LiteralInteger
+from querypy.planner.expressions.physical import Subtract as PhysicalSubtract
 from querypy.planner.planner import create_physical_expr, create_physical_plan
 from querypy.planner.plans import logical as logical_plans
 from querypy.planner.plans import physical as physical_plans
@@ -23,6 +25,20 @@ def test_alias():
     with pytest.raises(UnknownColumnError):
         create_physical_expr(Alias(expected_name, Column("t")), plan)
 
+def test_alias_expression():
+    """Test that we can alias other expressions that result in new or
+    different columns, not just columns from a plan"""
+    field_name = "somefiled"
+    expected_name = "somenewname"
+
+    plan = create_logical_test_plan(
+        schema=Schema([Field(field_name, ArrowTypes.StringType)])
+    )
+    col = create_physical_expr(Alias(expected_name, Subtract(Column(field_name), LiteralInteger(1))), plan)
+
+    # it's able to resolve the physical expr and column
+    assert isinstance(col, PhysicalSubtract)
+    assert col.l.i == 0
 
 def test_orderby():
     field_name1 = "somefiled"
