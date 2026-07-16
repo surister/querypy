@@ -100,9 +100,14 @@ class Aggregate(LogicalPlan):
         self.aggregate = aggregate
 
     def get_schema(self) -> Schema:
-        aggr_fields = [field.to_field(self.input) for field in self.aggregate]
         groupby_fields = [field.to_field(self.input) for field in self.group_by]
-        return Schema([*aggr_fields, *groupby_fields])
+        aggr_fields = [field.to_field(self.input) for field in self.aggregate]
+
+        # Order matters, we don't have an order-aware aggregate pipeline
+        # the hash aggregate algorithm adds the newly aggregated vectors
+        # at the end. TODO: Add a test that tests that both thing are added
+        # in the same place, sealing the contract.
+        return Schema([*groupby_fields, *aggr_fields,])
 
     def children(self) -> list["LogicalPlan"]:
         return [self.input]
