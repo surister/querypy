@@ -15,7 +15,7 @@ from querypy.types_ import Schema
 
 
 def create_physical_expr(
-    expr: LogicalExpression, input: LogicalPlan
+        expr: LogicalExpression, input: LogicalPlan
 ) -> PhysicalExpression:
     match expr:
         case logical_expressions.Column():
@@ -64,7 +64,8 @@ def create_physical_expr(
                 case MathOp.Divide.name:
                     return physical_expressions.Divide(l, r)
 
-    return
+    raise NotImplementedError(
+        f"Physical expression is not implemented for {type(expr)}")
 
 
 def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
@@ -74,9 +75,12 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
 
         case logical_plans.Projection():
             input = create_physical_plan(plan.input)
-            projection_schema = Schema([e.to_field(plan.input) for e in plan.expr])
-            projection_expr = [create_physical_expr(e, plan.input) for e in plan.expr]
-            return physical_plans.Projection(input, projection_schema, projection_expr)
+            projection_schema = Schema(
+                [e.to_field(plan.input) for e in plan.expr])
+            projection_expr = [create_physical_expr(e, plan.input) for e in
+                               plan.expr]
+            return physical_plans.Projection(input, projection_schema,
+                                             projection_expr)
         case logical_plans.Filter():
             input = create_physical_plan(plan.input)
             filter_expr = create_physical_expr(plan.expr, plan.input)
@@ -129,5 +133,5 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                 for (expr, ascending) in plan.order_by
             ]
             return physical_plans.OrderBy(input, order_by)
-    return
-    raise NotImplementedError(f"Physical plan is not implemented for {type(plan)}")
+    raise NotImplementedError(
+        f"Physical plan is not implemented for {type(plan)}")
