@@ -173,7 +173,8 @@ class Accumulator(abc.ABC):
     def __repr__(self):
         return (
             self.__class__.__name__
-            + f"(accumulated_values={self.accumulated_values}, value={self.value})"
+            + f"(accumulated_values={self.accumulated_values}, value"
+              f"={self.final_value()})"
         )
 
 
@@ -193,36 +194,36 @@ class MaxAccumulator(Accumulator):
 
 class CountAccumulator(Accumulator):
     def __init__(self):
-        self.count = 0
+        self.accumulated_values = 0
 
     def accumulate(self, _):
-        self.count += 1
+        self.accumulated_values += 1
 
     def final_value(self) -> typing.Any:
-        return self.count
+        return self.accumulated_values
 
 
 class AvgAccumulator(Accumulator):
     def __init__(self):
         self.count = 0
-        self.total_value = 0
+        self.accumulated_values = 0
 
     def accumulate(self, value):
         self.count += 1
-        self.total_value += value
+        self.accumulated_values += value
 
     def final_value(self) -> typing.Any:
-        return self.total_value / self.count
+        return self.accumulated_values / self.count
 
 class SumAccumulator(Accumulator):
     def __init__(self):
-        self.total_value = 0
+        self.accumulated_values = 0
 
     def accumulate(self, value):
-        self.total_value += value
+        self.accumulated_values += value
 
     def final_value(self) -> typing.Any:
-        return self.total_value
+        return self.accumulated_values
 
 
 
