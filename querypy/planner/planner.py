@@ -24,6 +24,12 @@ def create_physical_expr(
                 raise UnknownColumnError(f"{i}")
             return physical_expressions.Column(i)
         case logical_expressions.Alias():
+            # If it is not a Column, it can be other expressions that
+            # need to be resolved first.
+            if not isinstance(expr.expr, logical_expressions.Column):
+                expr = create_physical_expr(expr.expr, input)
+                return expr
+
             # Obtain the index by the original name, not the aliased.
             i = input.get_schema().get_index_by_name(expr.expr.name)
             if i < 0:
