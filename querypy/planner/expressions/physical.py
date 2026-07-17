@@ -45,7 +45,11 @@ class LiteralString(Literal):
         self.value = value
 
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
-        return LiteralValueVector(ArrowTypes.StringType, self.value, input.row_count)
+        return LiteralValueVector(
+            ArrowTypes.StringType,
+            self.value,
+            input.row_count
+        )
 
 
 class LiteralInteger(Literal):
@@ -57,7 +61,8 @@ class LiteralInteger(Literal):
         self.value = value
 
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
-        return LiteralValueVector(ArrowTypes.Int32Type, self.value, input.row_count)
+        return LiteralValueVector(ArrowTypes.Int32Type, self.value,
+                                  input.row_count)
 
 
 class LiteralFloat(Literal):
@@ -69,7 +74,8 @@ class LiteralFloat(Literal):
         self.value = value
 
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
-        return LiteralValueVector(ArrowTypes.FloatType, self.value, input.row_count)
+        return LiteralValueVector(ArrowTypes.FloatType, self.value,
+                                  input.row_count)
 
 
 class Binary(PhysicalExpression):
@@ -81,14 +87,19 @@ class Binary(PhysicalExpression):
         self.l = l
         self.r = r
 
-    def evaluate(self, input: RecordBatch) -> tuple[ColumnVectorABC, ColumnVectorABC]:
+    def is_operation_supported(self, ty_l, ty_r) -> bool:
+        return False
+
+    def evaluate(self, input: RecordBatch) -> tuple[
+        ColumnVectorABC, ColumnVectorABC]:
         ll = self.l.evaluate(input)
         lr = self.r.evaluate(input)
 
         assert ll.size == lr.size, "columns have distinct row sizes"
-        if ll.type != lr.type:
+        if not self.is_operation_supported(ll.type, lr.type):
             raise TypeError(
-                f"Binary expression operands do not have the same type: l {ll.type} r {lr.type}"
+                f"Operation {self.__class__.__qualname__} is not supported for "
+                f"left:{ll.type!r} right:{lr.type!r}"
             )
         return ll, lr
 
@@ -100,9 +111,24 @@ class MathOperation(Binary):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
         ll, lr = super().evaluate(input)
         result = [
-            self.operate(ll.get_value(i), lr.get_value(i)) for i in range(len(ll))
+            self.operate(ll.get_value(i), lr.get_value(i)) for i in
+            range(len(ll))
         ]
         return ColumnVector(ArrowTypes.from_pyvalue(result[0]), result, ll.size)
+
+    def is_operation_supported(self, ty_l, ty_r) -> bool:
+        # probably should go in the logical layer
+        match ty_l, ty_r:
+            case (ArrowTypes.FloatType, ArrowTypes.Int32Type):
+                return True
+            case (ArrowTypes.Int32Type, ArrowTypes.FloatType):
+                return True
+            case (ArrowTypes.Int32Type, ArrowTypes.Int32Type):
+                return True
+            case (ArrowTypes.FloatType, ArrowTypes.FloatType):
+                return True
+            case _:
+                return False
 
 
 class Subtract(MathOperation):
@@ -172,9 +198,9 @@ class Accumulator(abc.ABC):
 
     def __repr__(self):
         return (
-            self.__class__.__name__
-            + f"(accumulated_values={self.accumulated_values}, value"
-              f"={self.final_value()})"
+                self.__class__.__name__
+                + f"(accumulated_values={self.accumulated_values}, value"
+                  f"={self.final_value()})"
         )
 
 
@@ -215,6 +241,7 @@ class AvgAccumulator(Accumulator):
     def final_value(self) -> typing.Any:
         return self.accumulated_values / self.count
 
+
 class SumAccumulator(Accumulator):
     def __init__(self):
         self.accumulated_values = 0
@@ -224,7 +251,6 @@ class SumAccumulator(Accumulator):
 
     def final_value(self) -> typing.Any:
         return self.accumulated_values
-
 
 
 class Aggregate(PhysicalExpression, abc.ABC):
@@ -261,6 +287,7 @@ class Avg(Aggregate):
 
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         pass
+
 
 class Sum(Aggregate):
     def create_accumulator(self) -> Accumulator:
