@@ -31,6 +31,18 @@ class CSVDataSource(DataSource):
     def __init__(self, path: str):
         self.path = path
 
+    def parse_value(self, value):
+        if value.isdigit():
+            return int(value)
+
+        if "." in value:
+            try:
+                return float(value)
+            except ValueError:
+                pass
+
+        return value
+
     def reset_schema_cache(self):
         """
         Resets the cached schema.
@@ -51,9 +63,11 @@ class CSVDataSource(DataSource):
             columns = next(reader)
             first_row = next(reader)
         fields = []
+
         for name, value in zip(columns, first_row):
-            v = int(value) if value.isdigit() else value
-            fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
+            fields.append(
+                Field(name, ArrowTypes.from_pyvalue(self.parse_value(value)))
+            )
         return Schema(fields)
 
     def scan(self, projection: list[str]) -> list[RecordBatch]:
@@ -83,8 +97,11 @@ class CSVDataSource(DataSource):
             values = [[] for _ in range(len(columns))]
 
             for i, (name, value) in enumerate(zip(columns, first_row)):
-                v = int(value) if value.isdigit() else value
-                fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
+                v = self.parse_value(value)
+                fields.append(
+                    Field(name, ArrowTypes.from_pyvalue(
+                    v))
+                )
 
                 # Append the first row.
                 values[i].append(v)
@@ -96,7 +113,7 @@ class CSVDataSource(DataSource):
                 while reader:
                     for i, value in enumerate(next(reader)):
                         if i < len(columns):
-                            v = int(value) if value.isdigit() else value
+                            v = self.parse_value(value)
                             v = None if v == "" else v
                             values[i].append(v)
             except StopIteration:
