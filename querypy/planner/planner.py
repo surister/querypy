@@ -21,7 +21,7 @@ def create_physical_expr(
         case logical_expressions.Column():
             i = input.get_schema().get_index_by_name(expr.name)
             if i < 0:
-                raise UnknownColumnError(f"{i}")
+                raise UnknownColumnError(f"{expr.name}")
             return physical_expressions.Column(i)
         case logical_expressions.Alias():
             # If it is not a Column, it can be other expressions that
@@ -65,7 +65,7 @@ def create_physical_expr(
                     return physical_expressions.Divide(l, r)
 
     raise NotImplementedError(
-        f"Physical expression is not implemented for {type(expr)}")
+        f"Physical expression is not implemented for {type(expr), expr}")
 
 
 def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
