@@ -228,6 +228,10 @@ class CountAccumulator(Accumulator):
     def final_value(self) -> typing.Any:
         return self.accumulated_values
 
+class NullableAwareCountAccumulator(CountAccumulator):
+    def accumulate(self, value):
+        if value is not None:
+            super().accumulate(value)
 
 class AvgAccumulator(Accumulator):
     def __init__(self):
@@ -275,8 +279,13 @@ class Max(Aggregate):
 
 
 class Count(Aggregate):
+    def __init__(self, expr: PhysicalExpression, ignore_nulls=True):
+        super().__init__(expr)
+        self.ignore_nulls = ignore_nulls
+
     def create_accumulator(self) -> Accumulator:
-        return CountAccumulator()
+        return CountAccumulator() if self.ignore_nulls else (
+            NullableAwareCountAccumulator())
 
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         pass

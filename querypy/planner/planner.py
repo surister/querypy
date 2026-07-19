@@ -102,7 +102,8 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
                     case "COUNT":
                         aggr.append(
                             physical_expressions.Count(
-                                create_physical_expr(expr.expr, plan.input)
+                                create_physical_expr(expr.expr, plan.input),
+                                ignore_nulls=expr.expr.name == '*',
                             )
                         )
                     case "AVG":

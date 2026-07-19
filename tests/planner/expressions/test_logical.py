@@ -20,8 +20,13 @@ from querypy.planner.expressions.logical import (
     Or,
     BooleanOp,
     Alias,
+    Count
 )
-from querypy.planner.plans.logical import OrderBy
+from querypy.planner.expressions.physical import CountAccumulator, \
+    NullableAwareCountAccumulator
+from querypy.planner.planner import create_physical_expr, create_physical_plan
+from querypy.planner.plans.logical import OrderBy, Aggregate, Scan
+
 from querypy.types_ import Schema, Field, ArrowTypes
 from tests import create_logical_test_plan
 
@@ -154,6 +159,7 @@ def test_alias():
         # We cannot alias if the column already exists
         Alias(field_name, Column(field_name)).to_field(plan)
 
+
 def test_orderby():
     field_name = "somefiled"
     orderby_cols = [(Column(field_name), True), ]
@@ -166,3 +172,25 @@ def test_orderby():
     assert orderby.input == plan
     assert orderby.children()[0] == plan
     assert orderby.order_by == orderby_cols
+
+
+def test_count_nulls():
+    field_name = "somefield"
+    schema = Schema([Field(field_name, ArrowTypes.StringType)])
+
+    scan = create_logical_test_plan(schema=schema)
+
+    plan = Aggregate(
+        input=scan,
+        group_by=[Column(field_name)],
+        aggregate=[Count(Column("*")), Count(Column(field_name))],
+    )
+
+    physical = create_physical_plan(plan)
+    assert physical.aggregate_expr[0].ignore_nulls == True
+    assert physical.aggregate_expr[1].ignore_nulls == False
+
+    assert isinstance(physical.aggregate_expr[0].create_accumulator(),
+                      CountAccumulator)
+    assert isinstance(physical.aggregate_expr[1].create_accumulator(),
+                      NullableAwareCountAccumulator)
