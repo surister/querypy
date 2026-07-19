@@ -73,6 +73,7 @@ class ArrowTypes(metaclass=NamedParameters):
     DoubleType = FloatingPoint(FloatingPointPrecision.DOUBLE)
     StringType = ArrowType()
     NoneType = ArrowType()
+    StarType = ArrowType()
 
     @classmethod
     def from_pyvalue(cls, v):
@@ -183,7 +184,7 @@ class Schema:
         for i, field in enumerate(self.fields):
             if field.name == name:
                 return i
-        return -1
+        return -2
 
     def __repr__(self):
         return f"{self.__class__.__name__}({', '.join(map(lambda f: str(f.type) + ':' + f.name, self.fields))})"

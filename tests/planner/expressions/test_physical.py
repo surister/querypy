@@ -21,27 +21,29 @@ from tests import create_rb, create_logical_test_plan, create_physical_test_plan
 
 def test_math():
     assert (
-        Subtract(LiteralInteger(10), LiteralInteger(5))
-        .evaluate(MagicMock())
-        .get_value(0)
-        == 5
+            Subtract(LiteralInteger(10), LiteralInteger(5))
+            .evaluate(MagicMock())
+            .get_value(0)
+            == 5
     )
 
     assert (
-        Add(LiteralInteger(10), LiteralInteger(5)).evaluate(MagicMock()).get_value(0)
-        == 15
+            Add(LiteralInteger(10), LiteralInteger(5)).evaluate(
+                MagicMock()).get_value(0)
+            == 15
     )
 
     assert (
-        Multiply(LiteralInteger(10), LiteralInteger(5))
-        .evaluate(MagicMock())
-        .get_value(0)
-        == 50
+            Multiply(LiteralInteger(10), LiteralInteger(5))
+            .evaluate(MagicMock())
+            .get_value(0)
+            == 50
     )
 
     assert (
-        Divide(LiteralInteger(10), LiteralInteger(5)).evaluate(MagicMock()).get_value(0)
-        == 2.0
+            Divide(LiteralInteger(10), LiteralInteger(5)).evaluate(
+                MagicMock()).get_value(0)
+            == 2.0
     )
 
 
@@ -90,7 +92,10 @@ def test_orderby():
     assert rb.get_field(order_by_b) == ["a", "b", "c"]
 
 
-def test_aggregations():
+def test_aggregations_correctness():
+    """
+    Checks that they compute the right values
+    """
     a = [1, 2, 3, 4, 31, 2]
     b = ["c", "b", "a", "a", "a", "c"]
     data = [a, b]

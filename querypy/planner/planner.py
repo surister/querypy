@@ -20,7 +20,7 @@ def create_physical_expr(
     match expr:
         case logical_expressions.Column():
             i = input.get_schema().get_index_by_name(expr.name)
-            if i < 0:
+            if i == -1:
                 raise UnknownColumnError(f"{expr.name}")
             return physical_expressions.Column(i)
         case logical_expressions.Alias():

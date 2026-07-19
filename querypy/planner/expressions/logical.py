@@ -41,6 +41,8 @@ class Column(LogicalExpression):
         for field in input.get_schema().fields:
             if field.name == self.name:
                 return field
+        if self.name == '*':
+            return Field('*', ArrowTypes.StarType)
         raise UnknownColumnError(self.name)
 
     def __repr__(self):
