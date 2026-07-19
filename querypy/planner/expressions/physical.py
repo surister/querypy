@@ -239,6 +239,7 @@ class AvgAccumulator(Accumulator):
         self.accumulated_values += value
 
     def final_value(self) -> typing.Any:
+        if self.count == 0: return 0
         return self.accumulated_values / self.count
 
 
