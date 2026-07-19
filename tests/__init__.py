@@ -1,13 +1,26 @@
+from unittest.mock import MagicMock
+
 from querypy.planner.expressions import LogicalPlan, PhysicalPlan
+from querypy.planner.plans.logical import Scan
 from querypy.types_ import Schema, RecordBatch, ArrowTypes, Field, ColumnVector
 
 
 def create_logical_test_plan(
     children: list = None, schema: Schema = None
 ) -> LogicalPlan:
-    class SomeLogicalPlan(LogicalPlan):
-        def __init__(self, children: list = None):
-            self._children = children or []
+
+    class SomeLogicalPlan(Scan):
+        def __init__(self, child: list = None):
+            super().__init__(
+                datasource=MagicMock(get_schema=lambda: MagicMock(
+                select=lambda _:['MagicMockSchema'])),
+                projection=None,
+                path=None
+            )
+            print(child, 'child')
+
+            self._children = child
+            print(self._children, '_children of', self)
             self._schema = schema or []
 
         def children(self) -> list["LogicalPlan"]:
@@ -16,7 +29,7 @@ def create_logical_test_plan(
         def get_schema(self) -> Schema:
             return self._schema
 
-    t = SomeLogicalPlan(children)
+    t = SomeLogicalPlan(child=children)
     t._schema = schema
     return t
 
