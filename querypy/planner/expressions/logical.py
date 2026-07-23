@@ -46,7 +46,7 @@ class Column(LogicalExpression):
         raise UnknownColumnError(self.name)
 
     def __repr__(self):
-        return "#" + self.name
+        return "#" + repr(self.name)
 
 
 class Literal(LogicalExpression):

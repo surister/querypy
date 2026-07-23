@@ -46,10 +46,9 @@ class DataFrame:
             A dataframe with a projection in its query plan.
         """
 
-        match columns:
-            # This only checks that the first one is a string.
-            case [str(), *_]:
-                columns = [Column(col) for col in columns]
+        columns = [
+            Column(col) if isinstance(col, str) else col for col in columns
+        ]
         return DataFrame(logical_plan.Projection(self._plan, columns))
 
     def filter(self, expr: str | logical_expression.Boolean) -> "DataFrame":
