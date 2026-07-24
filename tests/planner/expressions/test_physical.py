@@ -143,3 +143,61 @@ def test_aggregations_correctness():
 
     assert (aggr_result[0].fields
             == [['c', 'b', 'a'], [3, 2, 38]])
+
+def test_count_star():
+    """
+    Count(*) should ignore the nullability and count everything
+    """
+    a = [None, 2, 3, 4, None, 2]
+    b = ["c", "b", "a", "a", "a", "c"]
+    data = [a, b]
+    dummy_plan = create_physical_test_plan(data)
+
+    # Count(*)
+    aggr_result = HashAggregate(
+        dummy_plan,
+        group_expr=[Column(1)],
+        aggregate_expr=[Count(Column(-2))], # by convention count star is -2
+        schema=dummy_plan.schema()
+    ).execute()
+
+    assert (aggr_result[0].fields
+            == [['c', 'b', 'a'], [2, 1, 3]])
+
+def test_count_nulls():
+    """
+    A counter that does not ignore nulls like count(t1) should
+    not count nulls.
+    """
+    a = [None, 2, 3, 4, None, 2]
+    b = ["c", "b", "a", "a", "a", "c"]
+    data = [a, b]
+    dummy_plan = create_physical_test_plan(data)
+
+    aggr_result = HashAggregate(
+        dummy_plan,
+        group_expr=[Column(1)],
+        aggregate_expr=[Count(Column(0), ignore_nulls=False)], # by convention
+        schema=dummy_plan.schema()
+    ).execute()
+
+    assert (aggr_result[0].fields
+            == [['c', 'b', 'a'], [1, 1, 2]])
+
+def test_aggregation_order():
+    """Test right field orders when several aggregates/groupbys are present"""
+    a = [1, 2, 3, 4, 31, 1]
+    b = ["c", "b", "a", "a", "a", "c"]
+    c = [1, 2, 3, 4, 5, 6]
+    data = [a, b, c]
+    dummy_plan = create_physical_test_plan(data)
+
+    # Max
+    aggr_result = HashAggregate(
+        dummy_plan,
+        group_expr=[Column(0), Column(1)],
+        aggregate_expr=[Sum(Column(2))],
+        schema=Schema([Field('somecrap',
+                             type=ArrowTypes.StringType),
+                       *dummy_plan.schema().fields[:2], ])
+    ).execute()
