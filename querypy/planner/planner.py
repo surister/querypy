@@ -41,6 +41,8 @@ def create_physical_expr(
             return physical_expressions.LiteralInteger(expr.value)
         case logical_expressions.LiteralFloat():
             return physical_expressions.LiteralFloat(expr.value)
+        case logical_expressions.LiteralDate():
+            return physical_expressions.LiteralDate(expr.value)
         case logical_expressions.Boolean():
             l = create_physical_expr(expr.l, input)
             r = create_physical_expr(expr.r, input)

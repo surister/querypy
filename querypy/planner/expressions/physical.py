@@ -20,7 +20,6 @@ class Column(PhysicalExpression):
 
     def evaluate(self, input: RecordBatch) -> ColumnVector:
         """
-
         Returns
         -------
         The actual data wrapped in a `ColumnVector`
@@ -86,6 +85,18 @@ class LiteralFloat(Literal):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
         return LiteralValueVector(ArrowTypes.FloatType, self.value,
                                   input.row_count)
+
+
+class LiteralDate(Literal):
+    def __init__(self, value: str):
+        self.value = value
+
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        return LiteralValueVector(
+            ArrowTypes.DateType,
+            self.value,
+            input.row_count
+        )
 
 
 class Binary(PhysicalExpression):

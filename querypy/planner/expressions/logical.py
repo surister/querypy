@@ -1,3 +1,4 @@
+import datetime
 import functools
 from enum import Enum
 
@@ -100,6 +101,23 @@ class LiteralFloat(Literal):
     def to_field(self, _: LogicalPlan):
         return Field(str(self.value), ArrowTypes.FloatType)
 
+class LiteralDate(Literal):
+    """
+    Represents a date value, parsed only using ISO format, no timezone
+    is supported.
+    """
+    def __init__(self, value: str):
+        try:
+            self.value = datetime.date.fromisoformat(value)
+        except ValueError as e:
+            raise Exception(f'Could not parse string "{value}" into'
+                            f' {type(self)}') from e
+
+    def to_field(self, _: LogicalPlan):
+        return Field(str(self.value), ArrowTypes.DateType)
+
+    def __repr__(self):
+        return repr(self.value)
 
 class Binary(LogicalExpression):
     """An expression that represents a binary operation, binary in the sense
