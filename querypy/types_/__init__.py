@@ -1,6 +1,6 @@
 import abc
 import typing
-from enum import Enum
+from enum import Enum, auto
 
 
 class ArrowType:
@@ -29,6 +29,18 @@ class FloatingPoint(ArrowType):
     def __init__(self, precision: FloatingPointPrecision):
         super().__init__()
         self.precision = precision
+
+class IntervalType(Enum):
+    DAY = auto()
+    MONTH = auto()
+    YEAR = auto()
+    unset = auto()
+
+class Interval(ArrowType):
+    def __init__(self, value: int, type: IntervalType):
+        super().__init__()
+        self.value = value
+        self.type = type
 
 
 class NamedParameters(type):
@@ -69,6 +81,8 @@ class ArrowTypes(metaclass=NamedParameters):
     UInt16Type = IntType(16, True)
     UInt32Type = IntType(32, True)
     UInt64Type = IntType(64, True)
+    DateType = ArrowType()
+    IntervalType = IntervalType(IntervalType.unset)
     FloatType = FloatingPoint(FloatingPointPrecision.SINGLE)
     DoubleType = FloatingPoint(FloatingPointPrecision.DOUBLE)
     StringType = ArrowType()
