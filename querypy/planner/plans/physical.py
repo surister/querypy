@@ -5,7 +5,7 @@ from typing import Generator
 from querypy.datasources import DataSource
 from querypy.planner.expressions import PhysicalExpression
 from querypy.planner.expressions import PhysicalPlan
-from querypy.planner.expressions.physical import Accumulator
+from querypy.planner.expressions.physical import Accumulator, Literal
 from querypy.planner.expressions.physical import Aggregate
 from querypy.types_ import ColumnVector, RecordBatch, Schema
 
@@ -48,9 +48,18 @@ class Projection(PhysicalPlan):
 
     def execute(self) -> Generator[RecordBatch, Any, None]:
         result = self.input.execute()
-
         for batch in result:
-            columns = [expr.evaluate(batch) for expr in self.expr]
+            columns = []
+            for expr in self.expr:
+                match expr:
+                    case Literal():
+                        # consume the literal
+                        columns.append(
+                            expr.as_vector(batch)
+                        )
+                    case _:
+                        columns.append(expr.evaluate(batch))
+
             yield RecordBatch(self.schema, columns)
 
     def __repr__(self):

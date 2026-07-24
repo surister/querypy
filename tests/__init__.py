@@ -17,10 +17,7 @@ def create_logical_test_plan(
                 projection=None,
                 path=None
             )
-            print(child, 'child')
-
             self._children = child
-            print(self._children, '_children of', self)
             self._schema = schema or []
 
         def children(self) -> list["LogicalPlan"]:

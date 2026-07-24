@@ -35,6 +35,16 @@ class Literal(PhysicalExpression):
     def __repr__(self):
         return repr(self.value)
 
+    def as_vector(self, batch) -> ColumnVectorABC:
+        # Consumes the literal into a vector
+        l = self.evaluate(batch)
+        return ColumnVector(
+            type=l.type,
+            size=l.size,
+            # We use a list but could use a generator to store less memory
+            value=[l.value for _ in range(l.size)]
+        )
+
 
 class LiteralString(Literal):
     """
@@ -228,10 +238,12 @@ class CountAccumulator(Accumulator):
     def final_value(self) -> typing.Any:
         return self.accumulated_values
 
+
 class NullableAwareCountAccumulator(CountAccumulator):
     def accumulate(self, value):
         if value is not None:
             super().accumulate(value)
+
 
 class AvgAccumulator(Accumulator):
     def __init__(self):
