@@ -76,11 +76,18 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
         case logical_plans.Projection():
             input = create_physical_plan(plan.input)
             projection_schema = Schema(
-                [e.to_field(plan.input) for e in plan.expr])
-            projection_expr = [create_physical_expr(e, plan.input) for e in
-                               plan.expr]
-            return physical_plans.Projection(input, projection_schema,
-                                             projection_expr)
+                [e.to_field(plan.input) for e in plan.expr]
+            )
+
+            projection_expr = [
+                create_physical_expr(e, plan.input) for e in
+                plan.expr
+            ]
+            return physical_plans.Projection(
+                input,
+                projection_schema,
+                projection_expr
+            )
         case logical_plans.Filter():
             input = create_physical_plan(plan.input)
             filter_expr = create_physical_expr(plan.expr, plan.input)
