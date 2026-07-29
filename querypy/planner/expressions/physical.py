@@ -1,8 +1,9 @@
 import abc
 import typing
+import datetime
 
 from querypy.planner.expressions import PhysicalExpression
-from querypy.types_ import ArrowType
+from querypy.types_ import ArrowType, IntervalType
 from querypy.types_ import ArrowTypes
 from querypy.types_ import ColumnVector
 from querypy.types_ import ColumnVectorABC
@@ -94,10 +95,42 @@ class LiteralDate(Literal):
     def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
         return LiteralValueVector(
             ArrowTypes.DateType,
-            self.value,
+            self.create_date(self.value),
+            input.row_count
+        )
+    def create_date(self, value: str):
+        try:
+            return datetime.date.fromisoformat(value)
+        except ValueError as e:
+            raise Exception(f'Could not parse string "{value}" into'
+                            f' {type(self)}') from e
+
+
+
+class LiteralInterval(Literal):
+    def __init__(self, value: int, type: IntervalType):
+        if not isinstance(value, int):
+            raise TypeError('LiteralInterval value has to be an integer')
+
+        self.value = value
+        self.type = type
+
+    def evaluate(self, input: RecordBatch) -> ColumnVectorABC:
+        return LiteralValueVector(
+            ArrowTypes.IntervalType,
+            self.create_timedelta(self.value),
             input.row_count
         )
 
+    def create_timedelta(self, value: str) -> datetime.timedelta:
+        k = {
+            # very easy to break this
+            self.type.value:int(value)
+        }
+        return datetime.timedelta(**k)
+
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}({self.type}={self.value})'
 
 class Binary(PhysicalExpression):
     """
@@ -148,6 +181,9 @@ class MathOperation(Binary):
                 return True
             case (ArrowTypes.FloatType, ArrowTypes.FloatType):
                 return True
+            case (ArrowTypes.DateType, ArrowTypes.IntervalType):
+                return True
+
             case _:
                 return False
 

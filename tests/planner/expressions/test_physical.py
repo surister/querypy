@@ -1,4 +1,7 @@
+import datetime
 from unittest.mock import MagicMock
+
+import pytest
 
 from querypy.planner.dataframe import DataFrame
 from querypy.planner.expressions import PhysicalPlan
@@ -10,12 +13,13 @@ from querypy.planner.expressions.physical import (
     Divide,
     Add,
     Alias,
-    Column, Max, Avg, Count, Sum
+    Column, Max, Avg, Count, Sum, LiteralInterval
 )
 from querypy.planner.planner import create_physical_expr
 from querypy.planner.plans.physical import Projection, OrderBy, HashAggregate
 from querypy.planner.expressions import logical
-from querypy.types_ import RecordBatch, Schema, Field, ArrowTypes, ColumnVector
+from querypy.types_ import RecordBatch, Schema, Field, ArrowTypes, ColumnVector, \
+    IntervalType
 from tests import create_rb, create_logical_test_plan, create_physical_test_plan
 
 
@@ -201,3 +205,18 @@ def test_aggregation_order():
                              type=ArrowTypes.StringType),
                        *dummy_plan.schema().fields[:2], ])
     ).execute()
+
+def test_interval():
+    li = LiteralInterval(
+        1, type=IntervalType.DAY
+    ).evaluate(MagicMock())
+
+    assert li.get_value(0) == datetime.timedelta(days=1)
+    assert li.get_value(1) == datetime.timedelta(days=1)
+    assert li.get_value(100_000) == datetime.timedelta(days=1)
+
+    with pytest.raises(TypeError):
+        LiteralInterval(
+            [1,], type=IntervalType.DAY
+        ).evaluate(MagicMock())
+
