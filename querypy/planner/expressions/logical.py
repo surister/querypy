@@ -1,11 +1,11 @@
-import datetime
 import functools
+
 from enum import Enum
 
 from querypy.exceptions import UnknownColumnError, AlreadyExistsColumnError
 from querypy.planner.expressions import LogicalExpression
 from querypy.planner.expressions import LogicalPlan
-from querypy.types_ import ArrowTypes
+from querypy.types_ import ArrowTypes, IntervalType
 from querypy.types_ import Field
 
 
@@ -101,23 +101,31 @@ class LiteralFloat(Literal):
     def to_field(self, _: LogicalPlan):
         return Field(str(self.value), ArrowTypes.FloatType)
 
+
 class LiteralDate(Literal):
     """
     Represents a date value, parsed only using ISO format, no timezone
     is supported.
     """
+
     def __init__(self, value: str):
-        try:
-            self.value = datetime.date.fromisoformat(value)
-        except ValueError as e:
-            raise Exception(f'Could not parse string "{value}" into'
-                            f' {type(self)}') from e
+        self.value = value
 
     def to_field(self, _: LogicalPlan):
         return Field(str(self.value), ArrowTypes.DateType)
 
     def __repr__(self):
         return repr(self.value)
+
+
+class LiteralInterval(Literal):
+    def __init__(self, value: str, type: IntervalType):
+        self.value = value
+        self.type = type
+
+    def to_field(self, input: "LogicalPlan") -> Field:
+        return Field(self.value, ArrowTypes.IntervalType)
+
 
 class Binary(LogicalExpression):
     """An expression that represents a binary operation, binary in the sense
@@ -140,7 +148,11 @@ class Binary(LogicalExpression):
         The right operand of the operation.
     """
 
-    def __init__(self, name: str, op: str, l: LogicalExpression, r: LogicalExpression):
+    def __init__(self,
+                 name: str,
+                 op: str,
+                 l: LogicalExpression,
+                 r: LogicalExpression):
         self.name = name
         self.op = op
         self.l = l
@@ -164,7 +176,10 @@ class Boolean(Binary):
         return Field(self.name, ArrowTypes.BooleanType)
 
 
-def _boolean_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpression):
+def _boolean_expression(name: str,
+                        op: str,
+                        l: LogicalExpression,
+                        r: LogicalExpression):
     """Constructor for boolean expressions."""
     return Boolean(name, op, l, r)
 
@@ -256,7 +271,10 @@ class MathExpr(Binary):
         return Field('?column?', self.l.to_field(input).type)
 
 
-def _math_expression(name: str, op: str, l: LogicalExpression, r: LogicalExpression):
+def _math_expression(name: str,
+                     op: str,
+                     l: LogicalExpression,
+                     r: LogicalExpression):
     """Constructor for mathematical expressions"""
     return MathExpr(name, op, l, r)
 
@@ -284,12 +302,15 @@ Subtract = functools.partial(
 Multiply = functools.partial(
     _math_expression, MathOp.Multiply.name, MathOp.Multiply.symbol
 )
-Divide = functools.partial(_math_expression, MathOp.Divide.name, MathOp.Divide.symbol)
+Divide = functools.partial(_math_expression, MathOp.Divide.name,
+                           MathOp.Divide.symbol)
 
+# We could refactor this and put it in the class definition.
 Column.__add__ = lambda s, o: Add(s, o)
 LiteralString.__add__ = lambda s, o: Add(s, o)
 LiteralInteger.__add__ = lambda s, o: Add(s, o)
 LiteralFloat.__add__ = lambda s, o: Add(s, o)
+LiteralDate.__add__ = lambda s, o: Add(s, o)
 
 Column.__sub__ = lambda s, o: Subtract(s, o)
 LiteralString.__sub__ = lambda s, o: Subtract(s, o)
@@ -321,7 +342,8 @@ class Aggregate(LogicalExpression):
 
     def to_field(self, input: LogicalPlan):
         return Field(
-            f"{self.name.lower()}_{str(self.expr)}", self.expr.to_field(input).type
+            f"{self.name.lower()}_{str(self.expr)}",
+            self.expr.to_field(input).type
         )
 
     def __repr__(self):

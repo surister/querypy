@@ -1,7 +1,7 @@
 import abc
 import typing
-from enum import Enum, auto
-
+from enum import Enum
+from datetime import date
 
 class ArrowType:
     """Represents an arrow type"""
@@ -31,10 +31,14 @@ class FloatingPoint(ArrowType):
         self.precision = precision
 
 class IntervalType(Enum):
-    DAY = auto()
-    MONTH = auto()
-    YEAR = auto()
-    unset = auto()
+    # Very important that these match the
+    # constructor parameters of datetime.interval
+    # i don't like that we have a contract between a 'logical' class
+    # and a physical implementation (python interval)
+    DAY = 'days'
+    MONTH = 'months'
+    YEAR = 'years'
+    unset = None
 
 class Interval(ArrowType):
     def __init__(self, value: int, type: IntervalType):
@@ -98,10 +102,12 @@ class ArrowTypes(metaclass=NamedParameters):
                 return cls.Int32Type
             case float():
                 return cls.FloatType
+            case date():
+                return cls.DateType
             case None:
                 return cls.NoneType
             case _:
-                raise Exception(f"Type {v} not supported")
+                raise Exception(f"Type {type(v)} not supported")
 
 
 class ColumnVectorABC(abc.ABC):
