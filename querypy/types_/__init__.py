@@ -208,6 +208,12 @@ class Schema:
                 return i
         return -2 if name == '*' else -1
 
+    def get_field_by_name(self, name: str):
+        for field in self.fields:
+            if field.name == name:
+                return field
+        return None
+
     def __repr__(self):
         return f"{self.__class__.__name__}({', '.join(map(lambda f: str(f.type) + ':' + f.name, self.fields))})"
 

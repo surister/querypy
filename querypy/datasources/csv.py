@@ -1,6 +1,7 @@
 """_summary_."""
 
 import csv
+import datetime
 import functools
 
 from querypy.datasources import DataSource
@@ -28,10 +29,15 @@ class CSVDataSource(DataSource):
         provided it'll read all.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, override_schema: Schema = None):
+        self.override_schema = override_schema
         self.path = path
 
-    def parse_value(self, value):
+    def parse_value(self, value, name: str):
+        if self.override_schema:
+            if field := self.override_schema.get_field_by_name(name):
+                return self.override_type(value, field.type)
+
         if value.isdigit():
             return int(value)
 
@@ -40,7 +46,6 @@ class CSVDataSource(DataSource):
                 return float(value)
             except ValueError:
                 pass
-
         return value
 
     def reset_schema_cache(self):
@@ -48,6 +53,13 @@ class CSVDataSource(DataSource):
         Resets the cached schema.
         """
         raise NotImplemented()
+
+    def override_type(self, value, new_type):
+        match new_type:
+            case ArrowTypes.DateType:
+                return datetime.date.fromisoformat(value)
+            case _:
+                raise ValueError(f'unsupported cast {value} to {new_type}')
 
     @functools.lru_cache
     def get_schema(self) -> Schema:
@@ -65,12 +77,15 @@ class CSVDataSource(DataSource):
         fields = []
 
         for name, value in zip(columns, first_row):
+            value = self.parse_value(value, name)
             fields.append(
-                Field(name, ArrowTypes.from_pyvalue(self.parse_value(value)))
+                Field(name, ArrowTypes.from_pyvalue(value))
             )
         return Schema(fields)
 
-    def scan(self, projection: list[str]) -> list[RecordBatch]:
+    def scan(self,
+             projection: list[str],
+             override_types: None | list = None) -> list[RecordBatch]:
         """Scans the rows sequentially, creates a lists of values e.g. [[1,2,3], ['a','b','c']]
         and returns a `RecordBatch`.
 
@@ -97,11 +112,9 @@ class CSVDataSource(DataSource):
             values = [[] for _ in range(len(columns))]
 
             for i, (name, value) in enumerate(zip(columns, first_row)):
-                v = self.parse_value(value)
-                fields.append(
-                    Field(name, ArrowTypes.from_pyvalue(
-                    v))
-                )
+                v = self.parse_value(value, name)
+
+                fields.append(Field(name, ArrowTypes.from_pyvalue(v)))
 
                 # Append the first row.
                 values[i].append(v)
@@ -113,7 +126,7 @@ class CSVDataSource(DataSource):
                 while reader:
                     for i, value in enumerate(next(reader)):
                         if i < len(columns):
-                            v = self.parse_value(value)
+                            v = self.parse_value(value, schema.fields[i].name)
                             v = None if v == "" else v
                             values[i].append(v)
             except StopIteration:

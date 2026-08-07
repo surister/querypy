@@ -12,8 +12,10 @@ def create_logical_test_plan(
     class SomeLogicalPlan(Scan):
         def __init__(self, child: list = None):
             super().__init__(
-                datasource=MagicMock(get_schema=lambda: MagicMock(
-                select=lambda _:['MagicMockSchema'])),
+                datasource=MagicMock(
+                    get_schema=lambda: MagicMock(select=lambda _:['MagicMockSchema'])
+
+                ),
                 projection=None,
                 path=None
             )
