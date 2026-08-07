@@ -119,12 +119,23 @@ class LiteralDate(Literal):
 
 
 class LiteralInterval(Literal):
-    def __init__(self, value: str, type: IntervalType):
+    def __init__(self, value: int | str, type: IntervalType):
+        if isinstance(value, str):
+            try:
+                value = int(value)
+            except ValueError as e:
+                raise TypeError(
+                    "LiteralInterval value has to be an integer or an "
+                    "integer-like string"
+                ) from e
+        if not isinstance(value, int):
+            raise TypeError("LiteralInterval value has to be an integer")
+
         self.value = value
         self.type = type
 
     def to_field(self, input: "LogicalPlan") -> Field:
-        return Field(self.value, ArrowTypes.IntervalType)
+        return Field(str(self.value), ArrowTypes.IntervalType)
 
 
 class Binary(LogicalExpression):
@@ -246,11 +257,25 @@ Column.__gt__ = lambda s, o: Gt(s, o)
 LiteralString.__gt__ = lambda s, o: Gt(s, o)
 LiteralInteger.__gt__ = lambda s, o: Gt(s, o)
 LiteralFloat.__gt__ = lambda s, o: Gt(s, o)
+LiteralDate.__gt__ = lambda s, o: Gt(s, o)
 
 Column.__ge__ = lambda s, o: GtEq(s, o)
 LiteralString.__ge__ = lambda s, o: GtEq(s, o)
 LiteralInteger.__ge__ = lambda s, o: GtEq(s, o)
 LiteralFloat.__ge__ = lambda s, o: GtEq(s, o)
+LiteralDate.__ge__ = lambda s, o: GtEq(s, o)
+
+Column.__lt__ = lambda s, o: Lt(s, o)
+LiteralString.__lt__ = lambda s, o: Lt(s, o)
+LiteralInteger.__lt__ = lambda s, o: Lt(s, o)
+LiteralFloat.__lt__ = lambda s, o: Lt(s, o)
+LiteralDate.__lt__ = lambda s, o: Lt(s, o)
+
+Column.__le__ = lambda s, o: LtEq(s, o)
+LiteralString.__le__ = lambda s, o: LtEq(s, o)
+LiteralInteger.__le__ = lambda s, o: LtEq(s, o)
+LiteralFloat.__le__ = lambda s, o: LtEq(s, o)
+LiteralDate.__le__ = lambda s, o: LtEq(s, o)
 
 Column.__and__ = lambda s, o: And(s, o)
 LiteralString.__eq__ = lambda s, o: And(s, o)
@@ -316,6 +341,9 @@ Column.__sub__ = lambda s, o: Subtract(s, o)
 LiteralString.__sub__ = lambda s, o: Subtract(s, o)
 LiteralInteger.__sub__ = lambda s, o: Subtract(s, o)
 LiteralFloat.__sub__ = lambda s, o: Subtract(s, o)
+LiteralDate.__sub__ = lambda s, o: Subtract(s, o)
+LiteralInterval.__add__ = lambda s, o: Add(s, o)
+LiteralInterval.__sub__ = lambda s, o: Subtract(s, o)
 
 
 class Aggregate(LogicalExpression):

@@ -181,19 +181,30 @@ class MathOperation(Binary):
                 return True
             case (ArrowTypes.FloatType, ArrowTypes.FloatType):
                 return True
-            case (ArrowTypes.DateType, ArrowTypes.IntervalType):
-                return True
-
             case _:
                 return False
 
 
 class Subtract(MathOperation):
+    def is_operation_supported(self, ty_l, ty_r) -> bool:
+        return (
+            super().is_operation_supported(ty_l, ty_r)
+            or (ty_l, ty_r) == (ArrowTypes.DateType, ArrowTypes.IntervalType)
+            or (ty_l, ty_r) == (ArrowTypes.IntervalType, ArrowTypes.IntervalType)
+        )
+
     def operate(self, l, r):
         return l - r
 
 
 class Add(MathOperation):
+    def is_operation_supported(self, ty_l, ty_r) -> bool:
+        return (
+            super().is_operation_supported(ty_l, ty_r)
+            or (ty_l, ty_r) == (ArrowTypes.DateType, ArrowTypes.IntervalType)
+            or (ty_l, ty_r) == (ArrowTypes.IntervalType, ArrowTypes.IntervalType)
+        )
+
     def operate(self, l, r):
         return l + r
 
