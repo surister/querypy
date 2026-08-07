@@ -159,7 +159,8 @@ class DataFrame:
         return DataFrame(logical_plan.OrderBy(self._plan, columns))
 
     @classmethod
-    def scan_csv(cls, path: str, fields: list[str] = None) -> "DataFrame":
+    def scan_csv(cls, path: str, fields: list[str] = None, override_schema: Schema =
+    None) -> "DataFrame":
         """Reads the `fields` from a csv files in a given `path`.
 
         It performs very basic csv parsing, more diverse csv formats might not be
@@ -178,7 +179,8 @@ class DataFrame:
         'DataFrame'
             A dataframe with a plan to read csv in its logical plan.
         """
-        return DataFrame(logical_plan.Scan(path, CSVDataSource(path), fields))
+        return DataFrame(logical_plan.Scan(path, CSVDataSource(path, override_schema=override_schema),
+                                           projection=fields))
 
 
 def col(name: str) -> logical_expression.Column:
