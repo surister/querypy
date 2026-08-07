@@ -13,7 +13,8 @@ class Scan(LogicalPlan):
     it mostly delegates work to the datasource.
     """
 
-    def __init__(self, path: str, datasource: DataSource, projection: list[str]):
+    def __init__(self, path: str, datasource: DataSource,
+                 projection: list[str]):
         self.path = path
         self.datasource = datasource
         self.projection = projection
@@ -61,7 +62,7 @@ class Projection(LogicalPlan):
         ]
 
     def __repr__(self):
-        return f"{super().__repr__()}({', '.join(str(i) for i in self.expr)})"
+        return f"{super().__repr__()}: column_count: {len(self.expr)}"
 
 
 class Filter(LogicalPlan):
@@ -90,10 +91,10 @@ class Aggregate(LogicalPlan):
     """
 
     def __init__(
-        self,
-        input: LogicalPlan,
-        group_by: list[Column],
-        aggregate: list[AggregateExpression],
+            self,
+            input: LogicalPlan,
+            group_by: list[Column],
+            aggregate: list[AggregateExpression],
     ):
         self.input = input
         self.group_by = group_by
@@ -107,15 +108,17 @@ class Aggregate(LogicalPlan):
         # the hash aggregate algorithm adds the newly aggregated vectors
         # at the end. TODO: Add a test that tests that both thing are added
         # in the same place, sealing the contract.
-        return Schema([*groupby_fields, *aggr_fields,])
+        return Schema([*groupby_fields, *aggr_fields, ])
 
     def children(self) -> list["LogicalPlan"]:
         return [self.input]
 
     def __repr__(self):
         return (
-            super().__repr__()
-            + f"(group_by={self.group_by}, aggregate_by={self.aggregate})"
+                super().__repr__()
+                + f": group_keys:{[c for c in self.group_by]}, aggregate_count:"
+                  f" {len(
+                      self.aggregate)}"
         )
 
 
@@ -132,6 +135,6 @@ class OrderBy(LogicalPlan):
 
     def __repr__(self):
         return (
-            super().__repr__()
-            + f"({[(col, ascending) for col, ascending in self.order_by]})"
+                super().__repr__()
+                + f"({[(col, ascending) for col, ascending in self.order_by]})"
         )
