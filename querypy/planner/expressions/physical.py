@@ -98,13 +98,13 @@ class LiteralDate(Literal):
             self.create_date(self.value),
             input.row_count
         )
+
     def create_date(self, value: str):
         try:
             return datetime.date.fromisoformat(value)
         except ValueError as e:
             raise Exception(f'Could not parse string "{value}" into'
                             f' {type(self)}') from e
-
 
 
 class LiteralInterval(Literal):
@@ -125,12 +125,13 @@ class LiteralInterval(Literal):
     def create_timedelta(self, value: str) -> datetime.timedelta:
         k = {
             # very easy to break this
-            self.type.value:int(value)
+            self.type.value: int(value)
         }
         return datetime.timedelta(**k)
 
     def __repr__(self):
         return f'{self.__class__.__qualname__}({self.type}={self.value})'
+
 
 class Binary(PhysicalExpression):
     """
@@ -188,9 +189,11 @@ class MathOperation(Binary):
 class Subtract(MathOperation):
     def is_operation_supported(self, ty_l, ty_r) -> bool:
         return (
-            super().is_operation_supported(ty_l, ty_r)
-            or (ty_l, ty_r) == (ArrowTypes.DateType, ArrowTypes.IntervalType)
-            or (ty_l, ty_r) == (ArrowTypes.IntervalType, ArrowTypes.IntervalType)
+                super().is_operation_supported(ty_l, ty_r)
+                or (ty_l, ty_r) == (ArrowTypes.DateType,
+                                    ArrowTypes.IntervalType)
+                or (ty_l, ty_r) == (ArrowTypes.IntervalType,
+                                    ArrowTypes.IntervalType)
         )
 
     def operate(self, l, r):
@@ -200,9 +203,11 @@ class Subtract(MathOperation):
 class Add(MathOperation):
     def is_operation_supported(self, ty_l, ty_r) -> bool:
         return (
-            super().is_operation_supported(ty_l, ty_r)
-            or (ty_l, ty_r) == (ArrowTypes.DateType, ArrowTypes.IntervalType)
-            or (ty_l, ty_r) == (ArrowTypes.IntervalType, ArrowTypes.IntervalType)
+                super().is_operation_supported(ty_l, ty_r)
+                or (ty_l, ty_r) == (ArrowTypes.DateType,
+                                    ArrowTypes.IntervalType)
+                or (ty_l, ty_r) == (ArrowTypes.IntervalType,
+                                    ArrowTypes.IntervalType)
         )
 
     def operate(self, l, r):
@@ -263,6 +268,12 @@ class Lt(Boolean):
 class LtEq(Boolean):
     def compare(self, l, r, t: ArrowType) -> bool:
         return l <= r
+
+    def is_operation_supported(self, ty_l, ty_r) -> bool:
+        return (
+                super().is_operation_supported(ty_l, ty_r)
+                or (ty_l, ty_r) == (ArrowTypes.DateType, ArrowTypes.DateType)
+        )
 
 
 class Accumulator(abc.ABC):
