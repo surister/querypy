@@ -3,9 +3,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from querypy.planner.dataframe import DataFrame
-from querypy.planner.expressions import PhysicalPlan
-
 from querypy.planner.expressions.physical import (
     Subtract,
     LiteralInteger,
@@ -16,10 +13,9 @@ from querypy.planner.expressions.physical import (
     Column, Max, Avg, Count, Sum, LiteralInterval
 )
 from querypy.planner.planner import create_physical_expr
-from querypy.planner.plans.physical import Projection, OrderBy, HashAggregate
+from querypy.planner.plans.physical import OrderBy, HashAggregate
 from querypy.planner.expressions import logical
-from querypy.types_ import RecordBatch, Schema, Field, ArrowTypes, ColumnVector, \
-    IntervalType
+from querypy.types_ import Schema, Field, ArrowTypes, IntervalType
 from tests import create_rb, create_logical_test_plan, create_physical_test_plan
 
 
@@ -220,3 +216,46 @@ def test_interval():
             [1,], type=IntervalType.DAY
         ).evaluate(MagicMock())
 
+
+def test_interval_mathops():
+    """Test operations of mathematics between intervals"""
+    input_batch = create_rb([0, 0])
+
+    result = Add(
+        LiteralInterval(1, type=IntervalType.DAY),
+        LiteralInterval(2, type=IntervalType.DAY),
+    ).evaluate(input_batch)
+
+    assert result.type == ArrowTypes.IntervalType
+    assert result.value == [
+        datetime.timedelta(days=3),
+        datetime.timedelta(days=3),
+    ]
+
+    result = Subtract(
+        LiteralInterval(2, type=IntervalType.DAY),
+        LiteralInterval(1, type=IntervalType.DAY),
+    ).evaluate(input_batch)
+
+    assert result.type == ArrowTypes.IntervalType
+    assert result.value == [
+        datetime.timedelta(days=1),
+        datetime.timedelta(days=1),
+    ]
+
+def test_interval_mathops_crosstypes():
+    """Test operations of mathematics between intervals and other types
+    like dates"""
+    dummy_pl = create_logical_test_plan(schema=Schema([]))
+    expr = (
+        logical.LiteralDate("1998-12-01")
+        - logical.LiteralInterval("90", IntervalType.DAY)
+    )
+
+    result = create_physical_expr(expr, dummy_pl).evaluate(create_rb([0, 0]))
+
+    assert result.type == ArrowTypes.DateType
+    assert result.value == [
+        datetime.date(1998, 9, 2),
+        datetime.date(1998, 9, 2),
+    ]
