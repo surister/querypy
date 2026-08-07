@@ -1,7 +1,7 @@
 import abc
 import typing
 from enum import Enum
-from datetime import date
+from datetime import date, timedelta
 
 class ArrowType:
     """Represents an arrow type"""
@@ -104,6 +104,8 @@ class ArrowTypes(metaclass=NamedParameters):
                 return cls.FloatType
             case date():
                 return cls.DateType
+            case timedelta():
+                return cls.IntervalType
             case None:
                 return cls.NoneType
             case _:
