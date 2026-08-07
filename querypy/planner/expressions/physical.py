@@ -239,9 +239,19 @@ class Gt(Boolean):
         return l > r
 
 
+class GtEq(Boolean):
+    def compare(self, l, r, t: ArrowType) -> bool:
+        return l >= r
+
+
 class Lt(Boolean):
     def compare(self, l, r, t: ArrowType) -> bool:
         return l < r
+
+
+class LtEq(Boolean):
+    def compare(self, l, r, t: ArrowType) -> bool:
+        return l <= r
 
 
 class Accumulator(abc.ABC):

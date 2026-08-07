@@ -53,8 +53,12 @@ def create_physical_expr(
                     return physical_expressions.Eq(l, r)
                 case "gt":
                     return physical_expressions.Gt(l, r)
+                case "gteq":
+                    return physical_expressions.GtEq(l, r)
                 case "lt":
                     return physical_expressions.Lt(l, r)
+                case "lteq":
+                    return physical_expressions.LtEq(l, r)
         case logical_expressions.MathExpr():
             l = create_physical_expr(expr.l, input)
             r = create_physical_expr(expr.r, input)
