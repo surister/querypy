@@ -240,6 +240,7 @@ class RecordBatch:
         self.fields = fields
 
     def column_names(self) -> list[str]:
+        """Returns the names of the columns, same order as schema fields."""
         return list(map(lambda x: x.name, self.schema.fields))
 
     @classmethod
@@ -262,6 +263,8 @@ class RecordBatch:
 
         The total amount of rows of a RecordBatch can
          be calculated by `row_count x column_count`
+
+        All columns must have the same row_count.
         """
         if not self.fields:
             return 0
@@ -269,9 +272,13 @@ class RecordBatch:
 
     @property
     def column_count(self):
+        """The number of columns in the RecordBatch"""
         return len(self.fields)
 
     def get_field(self, i) -> ColumnVector:
+        """
+        Returns a field given its index position within the RecordBatch
+        """
         try:
             return self.fields[i]
         except IndexError as e:

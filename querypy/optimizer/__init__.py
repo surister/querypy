@@ -21,7 +21,9 @@ class OptimizerRule(abc.ABC):
 
 
 def extract_columns(
-    expr: list[LogicalExpression], input: LogicalPlan = None, columns: list[str] = None
+        expr: list[LogicalExpression],
+        input: LogicalPlan = None,
+        columns: list[str] = None
 ):
     if not columns:
         columns = []
