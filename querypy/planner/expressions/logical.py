@@ -115,11 +115,11 @@ class LiteralDate(Literal):
         return Field(str(self.value), ArrowTypes.DateType)
 
     def __repr__(self):
-        return repr(self.value)
+        return f'{repr(self.value)}::date'
 
 
 class LiteralInterval(Literal):
-    def __init__(self, value: int | str, type: IntervalType):
+    def __init__(self, value: int | str, _type: IntervalType):
         if isinstance(value, str):
             try:
                 value = int(value)
@@ -129,10 +129,14 @@ class LiteralInterval(Literal):
                     "integer-like string"
                 ) from e
         if not isinstance(value, int):
-            raise TypeError("LiteralInterval value has to be an integer")
+            raise TypeError("LiteralInterval value has to be an integer but "
+                            f"is {type(value)}")
 
         self.value = value
-        self.type = type
+        self.type = _type
+
+    def __repr__(self):
+        return f'{self.value} {self.type}'
 
     def to_field(self, input: "LogicalPlan") -> Field:
         return Field(str(self.value), ArrowTypes.IntervalType)
