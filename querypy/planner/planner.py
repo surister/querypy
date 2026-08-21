@@ -71,6 +71,23 @@ def create_physical_expr(
                     return physical_expressions.Multiply(l, r)
                 case MathOp.Divide.name:
                     return physical_expressions.Divide(l, r)
+        case logical_expressions.Max():
+            return physical_expressions.Max(
+                create_physical_expr(expr.expr, input)
+            )
+        case logical_expressions.Count():
+            return physical_expressions.Count(
+                create_physical_expr(expr.expr, input),
+                ignore_nulls=expr.expr.name == '*',
+            )
+        case logical_expressions.Avg():
+            return physical_expressions.Avg(
+                create_physical_expr(expr.expr, input)
+            )
+        case logical_expressions.Sum():
+            return physical_expressions.Sum(
+                create_physical_expr(expr.expr, input)
+            )
 
     raise NotImplementedError(
         f"Physical expression is not implemented for {type(expr), expr}")
@@ -105,36 +122,9 @@ def create_physical_plan(plan: LogicalPlan) -> PhysicalPlan:
             group_expr = [
                 create_physical_expr(expr, plan.input) for expr in plan.group_by
             ]
-            aggr = []
-            for expr in plan.aggregate:
-                match expr.name:
-                    case "MAX":
-                        aggr.append(
-                            physical_expressions.Max(
-                                create_physical_expr(expr.expr, plan.input)
-                            )
-                        )
-                    case "COUNT":
-                        aggr.append(
-                            physical_expressions.Count(
-                                create_physical_expr(expr.expr, plan.input),
-                                ignore_nulls=expr.expr.name == '*',
-                            )
-                        )
-                    case "AVG":
-                        aggr.append(
-                            physical_expressions.Avg(
-                                create_physical_expr(expr.expr, plan.input)
-                            )
-                        )
-                    case "SUM":
-                        aggr.append(
-                            physical_expressions.Sum(
-                                create_physical_expr(expr.expr, plan.input)
-                            )
-                        )
-                    case _ as e:
-                        raise NotImplementedError(f"Not implemented for {e}")
+            aggr = [
+                create_physical_expr(expr, plan.input) for expr in plan.aggregate
+            ]
 
             return HashAggregate(
                 input,

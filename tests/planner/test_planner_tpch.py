@@ -5,6 +5,7 @@ from querypy.planner.expressions.logical import Sum, Column, Alias, Subtract, \
 
 from querypy.planner.planner import create_physical_plan
 from querypy.types_ import RecordBatch, IntervalType, Schema, Field, ArrowTypes
+from querypy.utils import get_text_tree
 
 
 def test_tphc_1():
@@ -71,51 +72,65 @@ def test_tphc_1():
         .aggregate(
             group_by=['l_returnflag', 'l_linestatus'],
             aggr=[
-                Sum(
+                Alias('sum_disc_price',Sum(
                     Multiply(Column("l_extendedprice"),
                              Subtract(LiteralInteger(1), Column('l_discount')))
-                ),
-                Sum(
+                )),
+                Alias('sum_charge', Sum(
                     Multiply(Multiply(Column("l_extendedprice"),
                                       Subtract(LiteralInteger(1),
                                                Column('l_discount'))),
                              Add(LiteralInteger(1), Column("l_tax")))
-                ),
-                Sum(Column("l_extendedprice")),
-                Sum(Column("l_quantity")),
-                Avg(Column("l_quantity")),
-                Avg(Column("l_extendedprice")),
-                Avg(Column("l_discount")),
-                Count(Column("*"))
+                )),
+                Alias('sum_base_price', Sum(Column("l_extendedprice"))),
+                Alias('sum_qty',Sum(Column("l_quantity"))),
+                Alias('avg_qty', Avg(Column("l_quantity"))),
+                Alias('avg_price',Avg(Column("l_extendedprice"))),
+                Alias('avg_disc',Avg(Column("l_discount"))),
+                Alias('count_order', Count(Column("*")))
             ]
         )
 
         .select(
             [
-                Alias('sum_disc_price',
-                      "sum_(#l_extendedprice * (1 - #l_discount))"),
-                Alias('sum_charge',
-                      "sum_((#l_extendedprice * (1 - #l_discount)) * (1 + #l_tax))"),
-                "l_returnflag",
-                "l_linestatus",
-                Alias('avg_qty', "avg_#l_quantity"),
-                Alias('count_order', "count_#*"),
-                Alias('sum_qty', "sum_#l_quantity"),
-                Alias('sum_base_price', "sum_#l_extendedprice"),
-                Alias('avg_price', "avg_#l_extendedprice"),
-                Alias('avg_disc', "avg_#l_discount"),
-                Alias('count_order', "count_#*")
+                'sum_disc_price',
+                'sum_charge',
+                'l_returnflag',
+                'l_linestatus',
+                'avg_qty',
+                'sum_qty',
+                'count_order',
+                'avg_disc',
+                'sum_base_price',
+                'avg_price'
             ]
         )
         .order_by([('l_returnflag', True), ('l_linestatus', True)])
     )
 
-
+    print(get_text_tree(df.logical_plan()))
     rb: RecordBatch = list(
         create_physical_plan(df.logical_plan()).execute()
     )[0]
-    assert rb.column_count == 11
-    assert rb.row_count == 6
+    assert rb.column_count == len(expected_values)
+    assert rb.row_count == len(list(expected_values.values())[0])
 
     for field, column_name in zip(rb.fields, rb.column_names()):
         assert expected_values[column_name] == field.value
+
+def test_two():
+    df = DataFrame.scan_csv(
+        "./data/lineitem.csv",
+        override_schema=Schema([Field('l_shipdate', ArrowTypes.DateType)])
+    ).aggregate(
+        group_by=[Column('l_partkey')],
+        aggr=[Avg(Alias('polllensa', Column('l_partkey'))), Avg(Column(
+            'l_partkey'))]
+    ).select(['polllensa'])
+
+    print(get_text_tree(df.logical_plan()))
+    print(get_text_tree(create_physical_plan(df.logical_plan())))
+    plan = df.logical_plan()
+    physica_plan = create_physical_plan(plan)
+    rbs = list(physica_plan.execute())[0]
+    print(rbs)
