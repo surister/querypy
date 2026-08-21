@@ -14,7 +14,7 @@ class Scan(LogicalPlan):
     """
 
     def __init__(self, path: str, datasource: DataSource,
-                 projection: list[str]):
+                 projection: list[str] = None):
         self.path = path
         self.datasource = datasource
         self.projection = projection
@@ -118,7 +118,7 @@ class Aggregate(LogicalPlan):
                 super().__repr__()
                 + f": group_keys:{[c for c in self.group_by]}, aggregate_count:"
                   f" {len(
-                      self.aggregate)}"
+                      self.aggregate) if self.aggregate else ''}"
         )
 
 

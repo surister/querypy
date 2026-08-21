@@ -364,8 +364,8 @@ class Aggregate(LogicalExpression):
         The field representing the expression.
     """
 
-    def __init__(self, name: str, expr: LogicalExpression):
-        self.name = name
+    def __init__(self, expr: LogicalExpression):
+        self.name = self.__class__.__qualname__
         self.expr = expr
 
     def to_field(self, input: LogicalPlan):
@@ -377,17 +377,15 @@ class Aggregate(LogicalExpression):
     def __repr__(self):
         return f"{self.name}({self.expr})"
 
+class Count(Aggregate): pass
 
-def _aggregate_expression(name: str, input: LogicalExpression):
-    """Constructor for aggregate expressions"""
-    return Aggregate(name, input)
+class Max(Aggregate): pass
 
+class Min(Aggregate): pass
 
-Count = functools.partial(_aggregate_expression, "COUNT")
-Max = functools.partial(_aggregate_expression, "MAX")
-Min = functools.partial(_aggregate_expression, "MIN")
-Sum = functools.partial(_aggregate_expression, "SUM")
-Avg = functools.partial(_aggregate_expression, "AVG")
+class Sum(Aggregate): pass
+
+class Avg(Aggregate): pass
 
 
 class Alias(LogicalExpression):
@@ -395,7 +393,7 @@ class Alias(LogicalExpression):
     Renames the given column to the new name if unless it's already in use.
     """
 
-    def __init__(self, name: str, old_name: str | Column):
+    def __init__(self, name: str, old_name: str | Column | Aggregate):
         self.name = name
         self.expr = Column(old_name) if isinstance(old_name, str) else old_name
 

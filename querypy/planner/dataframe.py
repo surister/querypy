@@ -4,7 +4,7 @@ from querypy.planner.expressions import (
     LogicalPlan,
     logical as logical_expression,
 )
-from querypy.planner.expressions.logical import Column, BooleanOp
+from querypy.planner.expressions.logical import Column, BooleanOp, Alias
 from querypy.planner.plans import logical as logical_plan
 from querypy.types_ import Schema
 
@@ -121,7 +121,7 @@ class DataFrame:
     def aggregate(
         self,
         group_by: list[LogicalExpression] | list[str],
-        aggr: list[logical_expression.Aggregate],
+        aggr: list[logical_expression.Aggregate | Alias],
     ):
         """_summary_.
 
