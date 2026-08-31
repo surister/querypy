@@ -121,7 +121,7 @@ class DataFrame:
     def aggregate(
         self,
         group_by: list[LogicalExpression] | list[str],
-        aggr: list[logical_expression.Aggregate | Alias],
+        aggr: list[logical_expression.AggregateFunction | Alias],
     ):
         """_summary_.
 

@@ -1,7 +1,7 @@
 from querypy.datasources import DataSource
 from querypy.planner.expressions import LogicalExpression
 from querypy.planner.expressions import LogicalPlan
-from querypy.planner.expressions.logical import Aggregate as AggregateExpression
+from querypy.planner.expressions.logical import AggregateFunction as AggregateExpression
 from querypy.planner.expressions.logical import Boolean
 from querypy.planner.expressions.logical import Column
 from querypy.types_ import Schema
@@ -61,6 +61,10 @@ class Projection(LogicalPlan):
             self.input,
         ]
 
+    def __repr_verbose__(self):
+        return (f"{super().__repr__()}: column_count: {len(self.expr)}, "
+                f"columns: {[col for col in self.expr]}")
+
     def __repr__(self):
         return f"{super().__repr__()}: column_count: {len(self.expr)}"
 
@@ -94,11 +98,11 @@ class Aggregate(LogicalPlan):
             self,
             input: LogicalPlan,
             group_by: list[Column],
-            aggregate: list[AggregateExpression],
+            aggregate_functions: list[AggregateExpression],
     ):
         self.input = input
         self.group_by = group_by
-        self.aggregate = aggregate
+        self.aggregate = aggregate_functions
 
     def get_schema(self) -> Schema:
         groupby_fields = [field.to_field(self.input) for field in self.group_by]
@@ -112,6 +116,14 @@ class Aggregate(LogicalPlan):
 
     def children(self) -> list["LogicalPlan"]:
         return [self.input]
+
+    def __repr_verbose__(self):
+        return (
+                super().__repr__()
+                + f": group_keys: {[c for c in self.group_by]}, "
+                + f"aggr_funcs_len: {len(self.aggregate)}, "
+                  f"aggr_funcs: {[a for a in self.aggregate]}"
+        )
 
     def __repr__(self):
         return (

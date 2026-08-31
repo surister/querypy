@@ -8,7 +8,7 @@ from querypy.planner.expressions.logical import (
     Gt,
     Binary,
     Literal,
-    Aggregate as AggregateExpr,
+    AggregateFunction as AggregateExpr,
 )
 from querypy.planner.plans.logical import Aggregate, Projection, Filter, Scan
 from querypy.utils import get_text_tree
@@ -40,7 +40,8 @@ def extract_columns(
             case AggregateExpr():
                 extract_columns([ex.expr], input, columns)
             case _:
-                raise NotImplementedError(f"Not supported column extraction in {ex}")
+                raise NotImplementedError(
+                    f"Not supported column extraction in {ex}")
     return columns
 
 
