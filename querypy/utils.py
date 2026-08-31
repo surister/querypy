@@ -1,4 +1,4 @@
-def get_text_tree(node, indent: int = 0):
+def get_text_tree(node, indent: int = 0, verbose=False):
     """
     Prints a tree. Every node of the tree is expected to have a children
     attribute.
@@ -15,9 +15,13 @@ def get_text_tree(node, indent: int = 0):
     """
     output = ""
     output += "\t" * indent
-    output += repr(node)
+
+    if verbose and hasattr(node, '__repr_verbose__'):
+        output += node.__repr_verbose__()
+    else:
+        output += repr(node)
     output += "\n"
     for children in node.children():
-        tree = get_text_tree(children, indent + 1)
+        tree = get_text_tree(children, indent + 1, verbose)
         output += tree
     return output

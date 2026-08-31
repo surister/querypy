@@ -183,7 +183,7 @@ def test_count_nulls():
     plan = Aggregate(
         input=scan,
         group_by=[Column(field_name)],
-        aggregate=[Count(Column("*")), Count(Column(field_name))],
+        aggregate_functions=[Count(Column("*")), Count(Column(field_name))],
     )
 
     physical = create_physical_plan(plan)

@@ -350,9 +350,9 @@ LiteralInterval.__add__ = lambda s, o: Add(s, o)
 LiteralInterval.__sub__ = lambda s, o: Subtract(s, o)
 
 
-class Aggregate(LogicalExpression):
-    """An aggregate expression, aggregations typically return a scalar value from
-    a set of values, for example the count of a column.
+class AggregateFunction(LogicalExpression):
+    """Represent aggregate function, aggregations typically return a scalar
+    value from a set of values, for example the count of a column.
 
     Attributes
     ----------
@@ -381,23 +381,23 @@ class Aggregate(LogicalExpression):
     def __repr__(self):
         return f"{self.name}({self.expr})"
 
-class Count(Aggregate): pass
+class Count(AggregateFunction): pass
 
-class Max(Aggregate): pass
+class Max(AggregateFunction): pass
 
-class Min(Aggregate): pass
+class Min(AggregateFunction): pass
 
-class Sum(Aggregate): pass
+class Sum(AggregateFunction): pass
 
-class Avg(Aggregate): pass
+class Avg(AggregateFunction): pass
 
 
 class Alias(LogicalExpression):
     """
-    Renames the given column to the new name if unless it's already in use.
+    Renames a Column to a new name unless it's already in use.
     """
 
-    def __init__(self, name: str, old_name: str | Column | Aggregate):
+    def __init__(self, name: str, old_name: str | Column | AggregateFunction):
         self.name = name
         self.expr = Column(old_name) if isinstance(old_name, str) else old_name
 

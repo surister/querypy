@@ -59,9 +59,14 @@ def test_tphc_1():
                       14537.2],
         'avg_disc': [0.05, 0.1, 0.04, 0.05333333333333334,
                      0.045000000000000005, 0.04],
-
     }
 
+    expected_plan = """OrderBy([(#l_returnflag, True), (#l_linestatus, True)])
+	Projection: column_count: 10, columns: [#sum_disc_price, #sum_charge, #l_returnflag, #l_linestatus, #avg_qty, #sum_qty, #count_order, #avg_disc, #sum_base_price, #avg_price]
+		Aggregate: group_keys: [#l_returnflag, #l_linestatus], aggr_funcs_len: 8, aggr_funcs: [Sum((#l_extendedprice * (1 - #l_discount))) as #sum_disc_price, Sum(((#l_extendedprice * (1 - #l_discount)) * (1 + #l_tax))) as #sum_charge, Sum(#l_extendedprice) as #sum_base_price, Sum(#l_quantity) as #sum_qty, Avg(#l_quantity) as #avg_qty, Avg(#l_extendedprice) as #avg_price, Avg(#l_discount) as #avg_disc, Count(#*) as #count_order]
+			Filter: (#l_shipdate <= ('1998-12-01'::date - 90 IntervalType.DAY))
+				Scan: './data/lineitem.csv'; projection=None
+"""
     df = (
         DataFrame.scan_csv(
             "./data/lineitem.csv",
@@ -72,7 +77,7 @@ def test_tphc_1():
         .aggregate(
             group_by=['l_returnflag', 'l_linestatus'],
             aggr=[
-                Alias('sum_disc_price',Sum(
+                Alias('sum_disc_price', Sum(
                     Multiply(Column("l_extendedprice"),
                              Subtract(LiteralInteger(1), Column('l_discount')))
                 )),
@@ -83,14 +88,13 @@ def test_tphc_1():
                              Add(LiteralInteger(1), Column("l_tax")))
                 )),
                 Alias('sum_base_price', Sum(Column("l_extendedprice"))),
-                Alias('sum_qty',Sum(Column("l_quantity"))),
+                Alias('sum_qty', Sum(Column("l_quantity"))),
                 Alias('avg_qty', Avg(Column("l_quantity"))),
-                Alias('avg_price',Avg(Column("l_extendedprice"))),
-                Alias('avg_disc',Avg(Column("l_discount"))),
+                Alias('avg_price', Avg(Column("l_extendedprice"))),
+                Alias('avg_disc', Avg(Column("l_discount"))),
                 Alias('count_order', Count(Column("*")))
             ]
         )
-
         .select(
             [
                 'sum_disc_price',
@@ -108,7 +112,6 @@ def test_tphc_1():
         .order_by([('l_returnflag', True), ('l_linestatus', True)])
     )
 
-    print(get_text_tree(df.logical_plan()))
     rb: RecordBatch = list(
         create_physical_plan(df.logical_plan()).execute()
     )[0]
@@ -117,20 +120,5 @@ def test_tphc_1():
 
     for field, column_name in zip(rb.fields, rb.column_names()):
         assert expected_values[column_name] == field.value
-
-def test_two():
-    df = DataFrame.scan_csv(
-        "./data/lineitem.csv",
-        override_schema=Schema([Field('l_shipdate', ArrowTypes.DateType)])
-    ).aggregate(
-        group_by=[Column('l_partkey')],
-        aggr=[Avg(Alias('polllensa', Column('l_partkey'))), Avg(Column(
-            'l_partkey'))]
-    ).select(['polllensa'])
-
-    print(get_text_tree(df.logical_plan()))
-    print(get_text_tree(create_physical_plan(df.logical_plan())))
-    plan = df.logical_plan()
-    physica_plan = create_physical_plan(plan)
-    rbs = list(physica_plan.execute())[0]
-    print(rbs)
+    print(get_text_tree(df.logical_plan(), verbose=True))
+    assert get_text_tree(df.logical_plan(), verbose=True) == expected_plan
